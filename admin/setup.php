@@ -63,11 +63,6 @@ $langs->loadLangs(array("admin", "takeposconnector@takeposconnector"));
 // Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
 $hookmanager->initHooks(array('takeposconnectorsetup', 'globalsetup'));
 
-// Access control
-if (!$user->admin) {
-	accessforbidden();
-}
-
 // Parameters
 $action = GETPOST('action', 'aZ09');
 $backtopage = GETPOST('backtopage', 'alpha');
@@ -78,64 +73,74 @@ $label = GETPOST('label', 'alpha');
 $scandir = GETPOST('scan_dir', 'alpha');
 $type = 'myobject';
 
-$arrayofparameters = array(
-	//'TAKEPOSCONNECTOR_MYPARAM1'=>array('type'=>'string', 'css'=>'minwidth500' ,'enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM2'=>array('type'=>'textarea','enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM3'=>array('type'=>'category:'.Categorie::TYPE_CUSTOMER, 'enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM4'=>array('type'=>'emailtemplate:thirdparty', 'enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM5'=>array('type'=>'yesno', 'enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM5'=>array('type'=>'thirdparty_type', 'enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM6'=>array('type'=>'securekey', 'enabled'=>1),
-	//'TAKEPOSCONNECTOR_MYPARAM7'=>array('type'=>'product', 'enabled'=>1),
-);
-
 $error = 0;
 $setupnotempty = 0;
 
-// Set this to 1 to use the factory to manage constants. Warning, the generated module will be compatible with version v15+ only
-$useFormSetup = 0;
-// Convert arrayofparameter into a formSetup object
-if ($useFormSetup && (float) DOL_VERSION >= 15) {
-	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
-	$formSetup = new FormSetup($db);
-
-	// you can use the param convertor
-	$formSetup->addItemsFromParamsArray($arrayofparameters);
-
-	// or use the new system see exemple as follow (or use both because you can ;-) )
-
-	/*
-	// Hôte
-	$item = $formSetup->newItem('NO_PARAM_JUST_TEXT');
-	$item->fieldOverride = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
-	$item->cssClass = 'minwidth500';
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM1 as a simple string input
-	$item = $formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM1');
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM1 as a simple textarea input but we replace the text of field title
-	$item = $formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM2');
-	$item->nameText = $item->getNameText().' more html text ';
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM3
-	$item = $formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM3');
-	$item->setAsThirdpartyType();
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM4 : exemple of quick define write style
-	$formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM4')->setAsYesNo();
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM5
-	$formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM5')->setAsEmailTemplate('thirdparty');
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM6
-	$formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM6')->setAsSecureKey()->enabled = 0; // disabled
-
-	// Setup conf TAKEPOSCONNECTOR_MYPARAM7
-	$formSetup->newItem('TAKEPOSCONNECTOR_MYPARAM7')->setAsProduct();
-	*/
-
-	$setupnotempty = count($formSetup->items);
+// Access control
+if (!$user->admin) {
+	accessforbidden();
 }
+
+// Set this to 1 to use the factory to manage constants. Warning, the generated module will be compatible with version v15+ only
+$useFormSetup = 1;
+
+if (!class_exists('FormSetup')) {
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
+}
+$formSetup = new FormSetup($db);
+
+// Setup conf for selection of an URL
+$item = $formSetup->newItem('WEIGHINGSCALE_WEBSOCKET_URL');
+$item->fieldParams['isMandatory'] = 1;
+$item->fieldAttr['placeholder'] = 'ws://localhost:12212/serial/WEIGH';
+$item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées';
+$item->cssClass = 'minwidth500';
+
+
+$TField = array(
+	'none' => $langs->trans('NONE'),
+	'diag06' => $langs->trans('Dialog-06'),
+);
+
+// Setup conf for a simple combo list
+$item = $formSetup->newItem('WEIGHINGSCALE_PROTOCOL')->setAsSelect($TField);
+
+// Setup conf for selection of an URL
+$item = $formSetup->newItem('CUSTOMERDISPLAY_WEBSOCKET_URL');
+$item->fieldParams['isMandatory'] = 1;
+$item->fieldAttr['placeholder'] = 'ws://localhost:12212/serial/DISPLAY';
+$item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client';
+$item->cssClass = 'minwidth500';
+
+
+$formSetup->newItem('Terminal 1')->setAsTitle();
+$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE1');
+$fieldOptions = array(
+	'oui' => $langs->trans('OUI'),
+	'non' => $langs->trans('NON'),
+);
+$item->setAsYesNo($fieldOptions);
+$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS1');
+$item = $formSetup->newItem('DIRECTPRINTWHB_PORT1');
+$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID1_1');
+$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID1_2');
+$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID1_3');
+
+$formSetup->newItem('Terminal 2')->setAsTitle();
+$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE2');
+$fieldOptions = array(
+	'oui' => $langs->trans('OUI'),
+	'non' => $langs->trans('NON'),
+);
+$item->setAsYesNo($fieldOptions);
+$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS2');
+$item = $formSetup->newItem('DIRECTPRINTWHB_PORT2');
+$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID2_1');
+$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID2_2');
+$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID2_3');
+
+
+$setupnotempty = count($formSetup->items);
 
 
 $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
@@ -144,6 +149,11 @@ $dirmodels = array_merge(array('/'), (array) $conf->modules_parts['models']);
 /*
  * Actions
  */
+
+// For retrocompatibility Dolibarr < 15.0
+if (versioncompare(explode('.', DOL_VERSION), array(15)) < 0 && $action == 'update' && !empty($user->admin)) {
+	$formSetup->saveConfFromPost();
+}
 
 include DOL_DOCUMENT_ROOT.'/core/actions_setmoduleoptions.inc.php';
 
@@ -244,7 +254,7 @@ if ($action == 'updateMask') {
 	}
 }
 
-
+$action = 'edit';
 
 /*
  * View
