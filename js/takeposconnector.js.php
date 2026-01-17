@@ -89,26 +89,32 @@ if (empty($dolibarr_nocache)) {
 }
 
 $refer = '';
-if (isset($_SERVER['HTTP_REFERER'])) $refer = $_SERVER['HTTP_REFERER'];
-if(empty($refer) || preg_match('/takepos\/index.php/', $refer)){
+if (isset($_SERVER['HTTP_REFERER'])) {
+	$refer = $_SERVER['HTTP_REFERER'];
+}
+if (empty($refer) || preg_match('/takepos\/index.php/', $refer)) {
 	$terminaltouse = 0;
 	if ($_SESSION["takeposterminal"]) {
 		$terminaltouse = $_SESSION["takeposterminal"];
 	}
 }
-if(empty($refer) || preg_match('/compta\/facture\/card.php/', $refer) ){
+if (empty($refer) || preg_match('/compta\/facture\/card.php/', $refer)) {
 	$terminaltouse = 0;
 }
 
 global $conf, $langs;
 
-
-
 $ws = 'ws://';
-if ($conf->global->{'DIRECTPRINTWHB_SECURE'.$terminaltouse}) $ws = 'wss://';
-
+if ($conf->global->{'DIRECTPRINTWHB_SECURE'.$terminaltouse}) {
+	$ws = 'wss://';
+}
 
 ?>
+
+// ===============================================
+// WebSocketSerial (defaults to CustomerDisplay)
+// ===============================================
+
 function WebSocketSerial(options) {
     var defaults = {
         url: 'ws://localhost:12212/serial/DISPLAY',
@@ -148,6 +154,14 @@ function WebSocketSerial(options) {
     var reconnect = function () {
         connect();
     };
+	
+	this.readyState = function () {
+		return websocket.readyState;
+	};
+	
+	this.onOpen = function(callback) {
+		websocket.onopen = callback;
+	};
 
     this.send = function (message) {
         websocket.send(message);
@@ -156,11 +170,15 @@ function WebSocketSerial(options) {
     connect();
 }
 
-
-	const serial = new WebSocketSerial({
-		url: '<?php echo $conf->global->CUSTOMERDISPLAY_WEBSOCKET_URL; ?>'
-	});
+// Make it available
+const webSocketCustomerDisplay = new WebSocketSerial({
+	url: '<?php echo $conf->global->CUSTOMERDISPLAY_WEBSOCKET_URL; ?>'
+});
 	
+// ===============================================
+// WebSocketWeigh (default protocol)
+// ===============================================
+
 function WebSocketWeigh(options) {
     var defaults = {
         url: 'ws://localhost:12212/serial/WEIGH',
@@ -230,18 +248,18 @@ function WebSocketWeigh(options) {
 
 var globalWeight = null;
 
-    var webSocketWeight = WebSocketWeigh({
-        url: '<?php echo $conf->global->WEIGHINGSCALE_WEBSOCKET_URL; ?>',
-        onUpdate: function (weight, stable) {
-            globalWeight = weight;
-            console.log("onUpdate: " + weight + " is stable: " + stable);
-        },
-    });
-
-/* Javascript library of module TakePOS connector */
+var webSocketWeight = WebSocketWeigh({
+	url: '<?php echo $conf->global->WEIGHINGSCALE_WEBSOCKET_URL; ?>',
+    onUpdate: function (weight, stable) {
+    	globalWeight = weight;
+        console.log("onUpdate: " + weight + " is stable: " + stable);
+    },
+});
 
 
-
+// ===============================================
+// WebSocketPrinter
+// ===============================================
 
 function WebSocketPrinter(options) {
 	var defaults = {
@@ -301,8 +319,7 @@ function WebSocketPrinter(options) {
 }
 
 var url = window.location.pathname;
-if (url.includes('/takepos/index.php') ||
-	url.includes('/compta/facture/card.php')) {
+if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php')) {
 
 	var printService = new WebSocketPrinter({
 		url: "<?php echo $ws;
@@ -349,72 +366,72 @@ if (url.includes('/takepos/index.php') ||
 
 
 
-	//TAKEPOS
-	//Action button
-		if (url.includes('/takepos/index.php')) {
-
-			$(document).on('DOMNodeInserted', function (e) {
-				console.log("DOMNodeInserted: " + e);
-				if (e.target.id == "poslines") {
-					//$("#buttonprint").prop("onclick", null).off("click");
-					//$("#buttonprint").unbind();
-
-					$('#buttonprint').attr("onclick", "DirectPrintWHBDolibarrTakeposPrinting(placeid);");
-
-					//botones de acciones
-					var buttons = document.querySelectorAll(".actionbutton");
-					for (var button of buttons) {
-						if (button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting")) {
-							button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
-						}
-
-						if (button["attributes"]["onclick"].value.includes("DolibarrOpenDrawer")) {
-							button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrOpenDrawer();";
-						}
-
+	//TAKEPOS Action button
+	if (url.includes('/takepos/index.php')) {
+	
+		$(document).on('DOMNodeInserted', function (e) {
+			console.log("DOMNodeInserted: " + e);
+			if (e.target.id == "poslines") {
+				//$("#buttonprint").prop("onclick", null).off("click");
+				//$("#buttonprint").unbind();
+	
+				$('#buttonprint').attr("onclick", "DirectPrintWHBDolibarrTakeposPrinting(placeid);");
+	
+				//botones de acciones
+				var buttons = document.querySelectorAll(".actionbutton");
+				for (var button of buttons) {
+					if (button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting")) {
+						button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
 					}
+	
+					if (button["attributes"]["onclick"].value.includes("DolibarrOpenDrawer")) {
+						button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrOpenDrawer();";
+					}
+	
 				}
-			});
+			}
+		});
+	
+	}
 
-		}
-			var orderprinter = new Array;
-			orderprinter[1] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_1'};?>";
-			orderprinter[2] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_2'};?>";
-			orderprinter[3] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_3'};?>";
+	var orderprinter = new Array;
+	orderprinter[1] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_1'};?>";
+	orderprinter[2] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_2'};?>";
+	orderprinter[3] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_3'};?>";
 
-			function DirectPrintWHBDolibarrTakeposPrinting(id) {
-				console.log("DolibarrTakeposPrinting Printing invoice ticket " + id)
-				$.ajax({
-					type: "GET",
-					data: {token: '<?php echo currentToken(); ?>'},
-					url: "<?php print dol_buildpath('/takeposconnector', 2) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
-					success: function (getdata) {
+	function DirectPrintWHBDolibarrTakeposPrinting(id) {
+		console.log("DolibarrTakeposPrinting Printing invoice ticket " + id)
+		$.ajax({
+			type: "GET",
+			data: {token: '<?php echo currentToken(); ?>'},
+			url: "<?php print dol_buildpath('/takeposconnector', 2) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
+			success: function (getdata) {
 
-						printService.submit({
-							"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
-							"raw_content": "\"" + getdata + "\""
-						});
-
-					}
+				printService.submit({
+					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
+					"raw_content": "\"" + getdata + "\""
 				});
+
+			}
+		});
+	}
+
+	function DirectPrintWHBDolibarrOpenDrawer() {
+		console.log("DolibarrOpenDrawer call ajax url /ajax/ajax.php?action=opendrawer&term=<?php print urlencode($_SESSION["takeposterminal"]); ?>");
+		$.ajax({
+			type: "GET",
+			data: {token: '<?php echo currentToken(); ?>'},
+			url: "<?php print dol_buildpath('/directprintwhb', 2) . '/ajax/ajax.php?action=opendrawer&term=' . urlencode($_SESSION["takeposterminal"]); ?>",
+			success: function (getdata) {
+
+				printService.submit({
+					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
+					"raw_content": "\"" + getdata + "\""
+				});
+
 			}
 
-			function DirectPrintWHBDolibarrOpenDrawer() {
-				console.log("DolibarrOpenDrawer call ajax url /ajax/ajax.php?action=opendrawer&term=<?php print urlencode($_SESSION["takeposterminal"]); ?>");
-				$.ajax({
-					type: "GET",
-					data: {token: '<?php echo currentToken(); ?>'},
-					url: "<?php print dol_buildpath('/directprintwhb', 2) . '/ajax/ajax.php?action=opendrawer&term=' . urlencode($_SESSION["takeposterminal"]); ?>",
-					success: function (getdata) {
-
-						printService.submit({
-							"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
-							"raw_content": "\"" + getdata + "\""
-						});
-
-					}
-
-				});
-			}
+		});
+	}
 
 }
