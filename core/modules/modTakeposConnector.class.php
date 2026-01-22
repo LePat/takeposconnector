@@ -432,6 +432,8 @@ class modTakeposConnector extends DolibarrModules
 				));
 			}
 		}
+		
+		$sql[] = "INSERT INTO llx_overwrite_trans (lang, transkey, transvalue) VALUES ('fr_FR', 'WeighingScale', 'Poids');";
 
 		return $this->_init($sql, $options);
 	}
@@ -447,6 +449,7 @@ class modTakeposConnector extends DolibarrModules
 	public function remove($options = '')
 	{
 		$sql = array();
+		$sql[] = "DELETE FROM llx_overwrite_trans WHERE lang = 'fr_FR' AND transkey = 'WeighingScale' AND transvalue = 'Poids';";
 		return $this->_remove($sql, $options);
 	}
 }
