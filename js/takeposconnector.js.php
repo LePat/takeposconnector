@@ -189,7 +189,6 @@ function WebSocketWeigh(options) {
         onDisconnect: function () {
         },
         onUpdate: function (weight, stable) {
-
         }
     };
 
@@ -200,11 +199,32 @@ function WebSocketWeigh(options) {
     var onMessage = function (evt) {
         var chr = evt.data;
 		console.log("data: " + chr);
-		globalWeight = CheckoutDialog06.parseRecord02(chr).weight;
-		$("#poslines").load("invoice.php?token=<?php echo newToken(); ?>&action=updateqty&place="+place+"&idline="+selectedline+"&number="+globalWeight, function() {
-			editnumber="";
-		});
-		return;
+
+		<?php if ($conf->global->WEIGHINGSCALE_PROTOCOL == "diag06") { ?>
+
+			var response = CheckoutDialog06.identifyMessage(evt.data);
+			if (response.type == 'ACK' && currentStateClient == ClientStates.SENDING_UNITPRICE_BEFORE_WEIGHING) {
+				currentStateClient = ClientStates.ACK_RECEIVED_FOR_UNITPRICE;
+				console.log(currentStateClient);
+				ENQ();
+			}
+			if (response.type == 'RECORD_02' && currentStateClient == ClientStates.REQUESTED_WEIGHING_SCALE) {
+				currentWeight = response.data.weight;
+				currentStateClient = ClientStates.WAITING_FOR_COMMAND;
+				console.log(currentStateClient);
+				$("#poslines").load("invoice.php?token=<?php echo newToken(); ?>&action=updateqty&place="+currentPlace+"&idline="+currentLine+"&number="+currentWeight);
+			}
+			if (response.type == 'RECORD_11' && currentStateClient == ClientStates.REQUESTED_WEIGHING_SCALE) {
+				currentStateClient = ClientStates.CHECKSUM;
+				console.log(currentStateClient);
+				checksum = response.data.randomNumber.charAt(0);
+				correctionValue = response.data.randomNumber.charAt(1)
+				checksumPair = [{ checksum, correctionValue}];
+				webSocketTakePOS.send(CheckoutDialog06.formatMessage(CheckoutDialog06.createRecord10(checksumPair)));
+			}
+
+		<?php } else { ?>
+			
         if (chr == "\n") {
             var weightOutput = settings.weightRegex.exec(buffer);
             var stableOutput = settings.stableRegex.test(buffer);
@@ -218,7 +238,9 @@ function WebSocketWeigh(options) {
         } else {
             buffer = buffer + chr;
         }
-		//console.log("buffer: " + buffer);
+		console.log("buffer: " + buffer);
+		
+		<?php } ?>
     };
 
     var onConnect = function () {
@@ -255,6 +277,53 @@ var webSocketWeight = WebSocketWeigh({
         console.log("onUpdate: " + weight + " is stable: " + stable);
     },
 });
+
+<?php if ($conf->global->WEIGHINGSCALE_PROTOCOL == "diag06") { ?>
+
+/**
+ * Etats de l'automate à états finis représentant l'utilisation du protocole diaglog-06 par le client.
+ */
+var ClientStates = {
+	'WAITING_FOR_COMMAND' : "En attente d'une commande",
+	'SENDING_UNITPRICE_BEFORE_WEIGHING' : "Envoi du prix unitaire",
+	'ACK_RECEIVED_FOR_UNITPRICE' : "Acquittement reçu suite à l'envoi du prix unitaire",
+	'REQUESTED_WEIGHING_SCALE' : "Pesée demandée",
+	'CHECKSUM' : "Demande de somme de contrôle",
+};
+
+var currentWeight = 0;
+var currentPlace = 0;
+var currentLine = 0;
+
+function askForWeight(unitPrice, place, idline) {
+	currentPlace = place; 
+	currentLine = idline;
+	currentStateClient = ClientStates.SENDING_UNITPRICE_BEFORE_WEIGHING;
+	console.log(currentStateClient);
+	sendUnitPrice(unitPrice);
+}
+
+function sendUnitPrice(price) {
+	if (webSocketWeight !== undefined) {
+		webSocketWeight.send(
+			String.fromCharCode(0x04, 0x02, 0x30, 0x31, 0x1b) +
+			CheckoutDialog06.fromFloatAsStringToDialog06(price) +
+			String.fromCharCode(0x1b, 0x03)
+		);
+	}
+}
+
+function ENQ() {
+	if (webSocketWeight !== undefined) {
+		if (currentStateClient == ClientStates.ACK_RECEIVED_FOR_UNITPRICE) {
+			currentStateClient = ClientStates.REQUESTED_WEIGHING_SCALE;
+			console.log(currentStateClient);
+		}
+		webSocketWeight.send(CheckoutDialog06.formatMessage(CheckoutDialog06.createENQ()));
+	}
+}
+
+<?php } ?>
 
 
 // ===============================================
@@ -323,11 +392,22 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 
 	var printService = new WebSocketPrinter({
 		url: "<?php echo $ws;
-		if ($conf->global->{'DIRECTPRINTWHB_IPADDRESS' . $terminaltouse}) echo $conf->global->{'DIRECTPRINTWHB_IPADDRESS' . $terminaltouse};
-		else echo "127.0.0.1";
+		if ($conf->global->{'DIRECTPRINTWHB_IPADDRESS' . $terminaltouse}) {
+			echo $conf->global->{'DIRECTPRINTWHB_IPADDRESS' . $terminaltouse};
+		} else {
+			echo "127.0.0.1";
+		}
 		echo ":";
-		if ($conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse}) echo $conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse};
-		else echo "12212";?>/printer",
+		if ($conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse}) {
+			echo $conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse};
+		} else {
+			echo "12212";
+		}
+		if ($conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse}) {
+			echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};
+		} else {
+			echo "/print/INVOICE";
+		} ?>",
 
 		onConnect: function () {
 			$.jnotify("<?php echo $langs->trans('Connected');?>",
@@ -337,7 +417,6 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 					remove: function () {
 					}
 				});
-
 			console.log('Connected');
 		},
 		onDisconnect: function () {
@@ -351,54 +430,74 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			console.log('Disconnected');
 		},
 		onUpdate: function (message) {
-			$.jnotify(message,
-				"info",
-				{timeout: 5},
-				{
-					remove: function () {
-					}
-				});
+			// Do nothing
+			//$.jnotify(message,
+			//	"info",
+			//	{timeout: 5},
+			//	{
+			//		remove: function () {
+			//		}
+			//	});
 
 			//parent.jQuery.colorbox.close();
-			console.log(message);
+			//console.log(message);
 		},
 	});
 
 
-
 	//TAKEPOS Action button
 	if (url.includes('/takepos/index.php')) {
+		
+		$(document).ready(function() {
+			// Selectionne le noeud dont les mutations seront observées
+			var targetNode = document.getElementById("poslines");
 	
-		$(document).on('DOMNodeInserted', function (e) {
-			console.log("DOMNodeInserted: " + e);
-			if (e.target.id == "poslines") {
-				//$("#buttonprint").prop("onclick", null).off("click");
-				//$("#buttonprint").unbind();
+			// Options de l'observateur (quelles sont les mutations à observer)
+			var config = { attributes: false, childList: true };
 	
-				$('#buttonprint').attr("onclick", "DirectPrintWHBDolibarrTakeposPrinting(placeid);");
-	
-				//botones de acciones
-				var buttons = document.querySelectorAll(".actionbutton");
-				for (var button of buttons) {
-					if (button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting")) {
-						button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
+			// Fonction callback à éxécuter quand une mutation est observée
+			var callback = function (mutationsList) {
+				for (var mutation of mutationsList) {
+					if (mutation.type == "childList") {
+						console.log("Un noeud enfant a été ajouté ou supprimé.");
+					} else if (mutation.type == "attributes") {
+						console.log("L'attribut '" + mutation.attributeName + "' a été modifié.");
 					}
-	
-					if (button["attributes"]["onclick"].value.includes("DolibarrOpenDrawer")) {
-						button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrOpenDrawer();";
+					// Substitution des fonctions Javascript pour les boutons d'action
+					var buttons = document.querySelectorAll(".actionbutton");
+					for (var button of buttons) {
+						if (button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting") ||
+							button["attributes"]["onclick"].value.includes("TakeposConnector") ||
+							button["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
+							button["attributes"]["onclick"].value.includes("TakeposPrinting")) {
+							button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
+						}
+						if (button["attributes"]["onclick"].value.includes("DolibarrOpenDrawer")) {
+							button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrOpenDrawer();";
+						}
 					}
-	
+					// Substitution pour le bouton d'impression après paiement
+					var buttonPrint = document.getElementById("buttonprint");
+					if (buttonPrint != null && (
+							buttonPrint["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting") ||
+							buttonPrint["attributes"]["onclick"].value.includes("TakeposConnector") ||
+							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
+							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrinting"))) {
+						buttonPrint["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
+					}
 				}
-			}
+			};
+	
+			// Créé une instance de l'observateur lié à la fonction de callback
+			var observer = new MutationObserver(callback);
+	
+			// Commence à observer le noeud cible pour les mutations précédemment configurées
+			observer.observe(targetNode, config);
 		});
 	
 	}
-
-	var orderprinter = new Array;
-	orderprinter[1] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_1'};?>";
-	orderprinter[2] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_2'};?>";
-	orderprinter[3] = "<?php echo $conf->global->{'DIRECTPRINTWHB_ORDER_TPPRINTERID' . $terminaltouse . '_3'};?>";
-
+	
+	
 	function DirectPrintWHBDolibarrTakeposPrinting(id) {
 		console.log("DolibarrTakeposPrinting Printing invoice ticket " + id)
 		$.ajax({
@@ -406,12 +505,10 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			data: {token: '<?php echo currentToken(); ?>'},
 			url: "<?php print dol_buildpath('/takeposconnector', 2) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
 			success: function (getdata) {
-
 				printService.submit({
 					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
 					"raw_content": "\"" + getdata + "\""
 				});
-
 			}
 		});
 	}
@@ -423,14 +520,11 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			data: {token: '<?php echo currentToken(); ?>'},
 			url: "<?php print dol_buildpath('/directprintwhb', 2) . '/ajax/ajax.php?action=opendrawer&term=' . urlencode($_SESSION["takeposterminal"]); ?>",
 			success: function (getdata) {
-
 				printService.submit({
 					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
 					"raw_content": "\"" + getdata + "\""
 				});
-
 			}
-
 		});
 	}
 
