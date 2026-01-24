@@ -49,8 +49,7 @@ class ActionsTakeposConnector extends CommonHookActions
 	public function completeJSProductDisplay($parameters, &$object, &$action, $hookmanager) {
 	    if ($parameters['caller'] == 'loadProducts') {
 	        $this->resprints = '
-				$("#prodiv"+ishow).attr("data-unit", data[idata][\'fk_unit\']);
-				$("#prodiv"+ishow).attr("data-price", data[idata][\'price_ttc\']);
+				$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
 		';
 	    }
 	}

@@ -212,7 +212,7 @@ function WebSocketWeigh(options) {
 				currentWeight = response.data.weight;
 				currentStateClient = ClientStates.WAITING_FOR_COMMAND;
 				console.log(currentStateClient);
-				$("#poslines").load("invoice.php?token=<?php echo newToken(); ?>&action=updateqty&place="+currentPlace+"&idline="+currentLine+"&number="+currentWeight);
+				currentCallback(currentWeight);
 			}
 			if (response.type == 'RECORD_11' && currentStateClient == ClientStates.REQUESTED_WEIGHING_SCALE) {
 				currentStateClient = ClientStates.CHECKSUM;
@@ -292,13 +292,11 @@ var ClientStates = {
 };
 
 var currentWeight = 0;
-var currentPlace = 0;
-var currentLine = 0;
+var currentCallback = null;
 
-function askForWeight(unitPrice, place, idline) {
-	currentPlace = place; 
-	currentLine = idline;
+function askForWeight(unitPrice, callback) {
 	currentStateClient = ClientStates.SENDING_UNITPRICE_BEFORE_WEIGHING;
+	currentCallback = callback;
 	console.log(currentStateClient);
 	sendUnitPrice(unitPrice);
 }
