@@ -112,32 +112,19 @@ $item->fieldAttr['placeholder'] = 'ws://localhost:12212/serial/DISPLAY';
 $item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client';
 $item->cssClass = 'minwidth500';
 
-
-$formSetup->newItem('Terminal 1')->setAsTitle();
-$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE1');
-$fieldOptions = array(
-	'oui' => $langs->trans('OUI'),
-	'non' => $langs->trans('NON'),
-);
-$item->setAsYesNo($fieldOptions);
-$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS1');
-$item = $formSetup->newItem('DIRECTPRINTWHB_PORT1');
-$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID1_1');
-$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID1_2');
-$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID1_3');
-
-$formSetup->newItem('Terminal 2')->setAsTitle();
-$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE2');
-$fieldOptions = array(
-	'oui' => $langs->trans('OUI'),
-	'non' => $langs->trans('NON'),
-);
-$item->setAsYesNo($fieldOptions);
-$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS2');
-$item = $formSetup->newItem('DIRECTPRINTWHB_PORT2');
-$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID2_1');
-$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID2_2');
-$item = $formSetup->newItem('DIRECTPRINTWHB_ORDER_TPPRINTERID2_3');
+for ($index = 0; $index < getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $index++) {
+	$indexTerminal = $index + 1;
+	$formSetup->newItem('Terminal '.$indexTerminal)->setAsTitle();
+	$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE'.$indexTerminal);
+	$fieldOptions = array(
+		'oui' => $langs->trans('OUI'),
+		'non' => $langs->trans('NON'),
+	);
+	$item->setAsYesNo($fieldOptions);
+	$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS'.$indexTerminal);
+	$item = $formSetup->newItem('DIRECTPRINTWHB_PORT'.$indexTerminal);
+	$item = $formSetup->newItem('DIRECTPRINTWHB_TPPRINTERID'.$indexTerminal);
+}
 
 
 $setupnotempty = count($formSetup->items);
