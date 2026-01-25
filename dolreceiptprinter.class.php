@@ -49,6 +49,9 @@
  * {dol_print_object_tax}                           Print object total tax
  * {dol_print_object_local_tax}                     Print object local tax
  * {dol_print_object_total}                         Print object total
+ * {dol_print_object_total_ht}                      Print object total HT
+ * {dol_print_object_total_vat}                     Print object total VAT
+ * {dol_print_object_total_ttc}                     Print object total TTC
  * {dol_print_order_lines}                          Print order lines for Printer
  * {dol_print_object_lines_with_notes}              Print object lines with notes
  * {dol_print_payment}                              Print payment method
@@ -642,10 +645,10 @@ class dolReceiptPrinter extends Printer
 					case 'DOL_PRINT_OBJECT_LINES':
 						foreach ($object->lines as $line) {
 							if ($line->fk_product) {
-								$spacestoadd = $nbcharactbyline - strlen($line->ref) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - strlen($line->product_label) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->ref.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
-								$this->printer->text(strip_tags(htmlspecialchars_decode($line->product_label))."\n");
+								$this->printer->text($line->product_label.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								//$this->printer->text(strip_tags(htmlspecialchars_decode($line->product_label))."\n");
 							} else {
 								$spacestoadd = $nbcharactbyline - strlen($line->description) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
@@ -697,6 +700,24 @@ class dolReceiptPrinter extends Printer
 							$total_localtax2 += $line->total_localtax2;
 						}
 						$this->printer->text(str_pad(price($total_localtax2), 10, ' ', STR_PAD_LEFT)."\n");
+						break;
+					case 'DOL_PRINT_OBJECT_TOTAL_HT':
+						$title = $langs->trans('TotalHT');
+						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
+						$this->printer->text($title.$spaces.str_pad(price($object->total_ht), 10, ' ', STR_PAD_LEFT)."\n");
+						break;
+					case 'DOL_PRINT_OBJECT_TOTAL_VAT':
+						$title = $langs->trans('TotalVAT');
+						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
+						$this->printer->text($title.$spaces.str_pad(price($object->total_tva), 10, ' ', STR_PAD_LEFT)."\n");
+						break;
+					case 'DOL_PRINT_OBJECT_TOTAL_TTC':
+						$title = $langs->trans('TotalTTC');
+						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
+						$this->printer->text($title.$spaces.str_pad(price($object->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_TOTAL':
 						$title = $langs->trans('TotalHT');
@@ -793,6 +814,12 @@ class dolReceiptPrinter extends Printer
 						break;
 					case 'DOL_BEEP':
 						$this->printer->getPrintConnector() -> write("\x1e");
+						break;
+					case 'SEPARATOR':
+						$this->printer->setUnderline(true);
+						$this->printer->text(str_repeat(" ", 48));
+						$this->printer->setUnderline(false);
+						$this->printer->text("\n");
 						break;
 					case 'DOL_PRINT_ORDER_LINES':
 						foreach ($object->lines as $line) {
