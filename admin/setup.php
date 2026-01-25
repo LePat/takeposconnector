@@ -114,7 +114,7 @@ $item->cssClass = 'minwidth500';
 
 for ($index = 0; $index < getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $index++) {
 	$indexTerminal = $index + 1;
-	$formSetup->newItem('Terminal '.$indexTerminal)->setAsTitle();
+	$formSetup->newItem('Terminal'.$indexTerminal)->setAsTitle();
 	$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE'.$indexTerminal);
 	$fieldOptions = array(
 		'oui' => $langs->trans('OUI'),

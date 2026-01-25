@@ -22,3 +22,20 @@ ModuleTakeposConnectorName = Takepos Connector
 # Module description 'ModuleTakeposConnectorDesc'
 ModuleTakeposConnectorDesc = Hardware connector for TakePOS
 
+Terminal1 = Printer for Terminal 1
+DIRECTPRINTWHB_SECURE1 = Use SSL ?
+DIRECTPRINTWHB_IPADDRESS1 = IP Adress/Host name
+DIRECTPRINTWHB_PORT1 = TCP port number
+DIRECTPRINTWHB_TPPRINTERID1 = WebSocket name
+
+Terminal2 = Printer for Terminal 2
+DIRECTPRINTWHB_SECURE2 = Use SSL ?
+DIRECTPRINTWHB_IPADDRESS2 = IP Adress/Host name
+DIRECTPRINTWHB_PORT2 = TCP port number
+DIRECTPRINTWHB_TPPRINTERID2 = WebSocket name
+
+Terminal3 = Printer for Terminal 3
+DIRECTPRINTWHB_SECURE3 = Use SSL ?
+DIRECTPRINTWHB_IPADDRESS3 = IP Adress/Host name
+DIRECTPRINTWHB_PORT3 = TCP port number
+DIRECTPRINTWHB_TPPRINTERID3 = WebSocket name

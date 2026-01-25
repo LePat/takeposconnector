@@ -26,3 +26,15 @@ WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance
 
+Terminal1 = Imprimante pour le Terminal 1
+DIRECTPRINTWHB_SECURE1 = Utiliser SSL ?
+DIRECTPRINTWHB_IPADDRESS1 = Adresse IP/Nom de l'hôte
+DIRECTPRINTWHB_PORT1 = Numéro de port TCP
+DIRECTPRINTWHB_TPPRINTERID1 = Nom du WebSocket
+
+Terminal2 = Imprimante pour le Terminal 2
+DIRECTPRINTWHB_SECURE2 = Utiliser SSL ?
+DIRECTPRINTWHB_IPADDRESS2 = Adresse IP/Nom de l'hôte
+DIRECTPRINTWHB_PORT2 = Numéro de port TCP
+DIRECTPRINTWHB_TPPRINTERID2 = Nom du WebSocket
+
