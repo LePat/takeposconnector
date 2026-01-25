@@ -2,11 +2,70 @@
 
 ## Features
 
-Description of the module...
+The TakePOSConnector module main feature si to allow TakePOS to use following hardware:
+- weighing scale
+- thermal printer
+- customer display
+- cash drawer
 
-<!--
-![Screenshot takeposconnector](img/screenshot_takeposconnector.png?raw=true "TakeposConnector"){imgmd}
--->
+## Requirements
+
+- new TakePOS Connector PHP to use "$" weighing scale protocol, thermal printer, cash drawer and customer display
+- Webapp-Hardware-Bridge to use continuous weight transmission or Dialog-06 protocol for weighing scale, ESC-POS thermal printer, customer display and cash drawer
+
+## Module Setup
+
+#### Global
+
+- Install the takeposconnector module from: https://github.com/LePat/TakePOS-Connector
+- Activate the takeposconnector module.
+- Add the parameter TAKEPOS_PRINT_METHOD value = takeposconnector
+- Set the print server by adding the parameter TAKEPOS_PRINT_SERVER, value = http://localhost:12212
+- Activate the Customer Display by adding the TAKEPOS_CUSTOMER_DISPLAY parameter, value = 1
+- Activate the Weighing Scale by adding the TAKEPOS_WEIGHING_SCALE parameter, value = 1
+
+#### Using the New TakePOS Connector PHP
+
+It listens on HTTP Request on port 12212.
+
+Install the New TakePOS Connector PHP from: https://github.com/andreubisquerra/TakePOS-connector-PHP
+
+It should work with the global setup as the takeposconnector module uses the New TakePOS Connector PHP by default:
+- /print/index.php is added to the URL (TAKEPOS_PRINT_SERVER) to connect to the printer
+- /print/drawer.php is added to the URL (TAKEPOS_PRINT_SERVER) to connect to the cash drawer
+- /display/index.php is added to the URL (TAKEPOS_PRINT_SERVER) to connect to the customer display
+- /scale/index.php is added to the URL (TAKEPOS_PRINT_SERVER) to connect to the weighing scale
+
+#### Using the Webapp-Hardware-Bridge
+
+It opens WebSockets on port 12212.
+
+Install the Webapp-Hardware-Bridge (WHB) from: https://github.com/imTigger/webapp-hardware-bridge
+
+Configure the takeposconnector to make TakePOS use the WHB:
+- Weighing Scale webservice: ws://127.0.0.1:12212/serial/WEIGH (or ws://127.0.0.1:12212/takepos for tests)
+- Customer Display webservice: ws://127.0.0.1:12212/serial/DISPLAY (to test it in the whb-console, run the socat command and setup it in WHB GUI)
+- Thermal printer for each terminal defined in TakePOS: 
+  - use of SSL for WebSockets
+  - host name (DIRECTPRINTWHB_IPADDRESS): 127.0.0.1
+  - tcp port (DIRECTPRINTWHB_PORT): 12212
+  - webservice name (DIRECTPRINTWHB_TPPRINTERID): /print/INVOICE (or /posprinter for tests in the whb-console)
+
+#### Using the TakePOS Connector Java
+
+It listens on HTTP Request on port 8111.
+
+Install the TakePOS Connector Java from: https://github.com/andreubisquerra/TakePOS-Connector-Java
+
+In this case, change the parameter TAKEPOS_PRINT_SERVER value to localhost or 127.0.0.1, the URL is filtered with the FILTER_VALIDATE_URL to determine if the URL is complete or not. If not, the URL will be completed like this: http://<TAKEPOS_PRINT_SERVER>:8111/print. Only printer is managed.
+
+#### Screenshot of TakePOSConnector module setup
+
+![Screenshot takeposconnector](img/setup.png "TakeposConnector")
+
+## Misc
+
+TakePOS Connector (this one), TakePOS Connector Java and New TakePOS Connector PHP habe different purposes.
 
 Other external modules are available on [Dolistore.com](https://www.dolistore.com).
 
@@ -14,15 +73,11 @@ Other external modules are available on [Dolistore.com](https://www.dolistore.co
 
 Translations can be completed manually by editing files into directories *langs*.
 
-<!--
 This module contains also a sample configuration for Transifex, under the hidden directory [.tx](.tx), so it is possible to manage translation using this service.
 
 For more informations, see the [translator's documentation](https://wiki.dolibarr.org/index.php/Translator_documentation).
 
 There is a [Transifex project](https://transifex.com/projects/p/dolibarr-module-template) for this module.
--->
-
-<!--
 
 ## Installation
 
@@ -73,7 +128,6 @@ From your browser:
   - Go to "Setup" -> "Modules"
   - You should now be able to find and enable the module
 
--->
 
 ## Licenses
 
