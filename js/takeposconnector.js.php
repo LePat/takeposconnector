@@ -401,7 +401,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 		} else {
 			echo "12212";
 		}
-		if ($conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse}) {
+		if ($conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse}) {
 			echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};
 		} else {
 			echo "/print/INVOICE";
