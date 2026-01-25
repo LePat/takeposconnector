@@ -112,8 +112,7 @@ $item->fieldAttr['placeholder'] = 'ws://localhost:12212/serial/DISPLAY';
 $item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client';
 $item->cssClass = 'minwidth500';
 
-for ($index = 0; $index < getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $index++) {
-	$indexTerminal = $index + 1;
+for ($indexTerminal = 0; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
 	$formSetup->newItem('Terminal'.$indexTerminal)->setAsTitle();
 	$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE'.$indexTerminal);
 	$fieldOptions = array(
