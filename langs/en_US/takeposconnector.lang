@@ -25,26 +25,9 @@ ModuleTakeposConnectorDesc = Hardware connector for TakePOS
 TemporaryReceipt = Temporary receipt
 number = no
 
-Terminal0 = Printer invoices
-DIRECTPRINTWHB_SECURE0 = Use SSL ?
-DIRECTPRINTWHB_IPADDRESS0 = IP Adress/Host name
-DIRECTPRINTWHB_PORT0 = TCP port number
-DIRECTPRINTWHB_TPPRINTERID0 = WebSocket name
-
-Terminal1 = Printer for Terminal 1
-DIRECTPRINTWHB_SECURE1 = Use SSL ?
-DIRECTPRINTWHB_IPADDRESS1 = IP Adress/Host name
-DIRECTPRINTWHB_PORT1 = TCP port number
-DIRECTPRINTWHB_TPPRINTERID1 = WebSocket name
-
-Terminal2 = Printer for Terminal 2
-DIRECTPRINTWHB_SECURE2 = Use SSL ?
-DIRECTPRINTWHB_IPADDRESS2 = IP Adress/Host name
-DIRECTPRINTWHB_PORT2 = TCP port number
-DIRECTPRINTWHB_TPPRINTERID2 = WebSocket name
-
-Terminal3 = Printer for Terminal 3
-DIRECTPRINTWHB_SECURE3 = Use SSL ?
-DIRECTPRINTWHB_IPADDRESS3 = IP Adress/Host name
-DIRECTPRINTWHB_PORT3 = TCP port number
-DIRECTPRINTWHB_TPPRINTERID3 = WebSocket name
+Terminal = Printer invoices
+DIRECTPRINTWHB_SECURE = Use SSL ?
+DIRECTPRINTWHB_IPADDRESS = IP Adress/Host name
+DIRECTPRINTWHB_PORT = TCP port number
+DIRECTPRINTWHB_TPPRINTERID = WebSocket name
+TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES = Template to use for invoices
