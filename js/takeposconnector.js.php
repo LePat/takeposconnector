@@ -507,6 +507,14 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
 					"raw_content": "\"" + getdata + "\""
 				});
+				console.log('Call /blockedlog/ajax/block-add on output of receipt.php.');
+				$.post('<?php echo DOL_URL_ROOT; ?>/blockedlog/ajax/block-add.php', {
+					id: id,
+					element: 'facture',
+					action: 'DOC_PREVIEW',
+					token: '<?php echo currentToken(); ?>'
+				   }
+				);
 			}
 		});
 	}

@@ -22,6 +22,9 @@ ModuleTakeposConnectorName = Takepos Connector
 # Module description 'ModuleTakeposConnectorDesc'
 ModuleTakeposConnectorDesc = Hardware connector for TakePOS
 
+TemporaryReceipt = Ticket provisoire
+number = n°
+
 WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance

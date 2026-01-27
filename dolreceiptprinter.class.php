@@ -42,9 +42,11 @@
  * {dol_cut_paper_partial}                          Cut ticket partially
  * {dol_open_drawer}                                Open cash drawer
  * {dol_beep}                                       Activate buzzer
+ * {separator}										Write a line
  * {dol_print_barcode}                              Print barcode
  * {dol_print_logo}                                 Print logo stored on printer. Example : <print_logo>32|32
  * {dol_print_logo_old}                             Print logo stored on printer. Must be followed by logo code. For old printers.
+ * {dol_value_object_status}						Print state of object (Temporary, original (no text), Duplicata with number)
  * {dol_print_object_lines}                         Print object lines
  * {dol_print_object_tax}                           Print object total tax
  * {dol_print_object_local_tax}                     Print object local tax
@@ -181,6 +183,7 @@ class dolReceiptPrinter extends Printer
 			'dol_cut_paper_partial' => 'DOL_CUT_PAPER_PARTIAL',
 			'dol_open_drawer' => 'DOL_OPEN_DRAWER',
 			'dol_beep' => 'DOL_BEEP',
+			'separator' => 'SEPARATOR',
 			'dol_print_text' => 'DOL_PRINT_TEXT',
 			'dol_print_barcode' => 'DOL_PRINT_BARCODE',
 			'dol_value_date' => 'DateInvoice',
@@ -196,12 +199,16 @@ class dolReceiptPrinter extends Printer
 			'dol_print_logo_old' => 'DOL_PRINT_LOGO_OLD',
 			'dol_value_object_id' => 'InvoiceID',
 			'dol_value_object_ref' => 'InvoiceRef',
+			'dol_value_object_status' => 'InvoiceStatus',
 			'dol_print_object_lines' => 'DOL_PRINT_OBJECT_LINES',
 			'dol_print_object_lines_with_notes' => 'DOL_PRINT_OBJECT_LINES_WITH_NOTES',
 			'dol_print_object_tax' => 'TotalVAT',
 			'dol_print_object_local_tax1' => 'TotalLT1',
 			'dol_print_object_local_tax2' => 'TotalLT2',
 			'dol_print_object_total' => 'Total',
+			'dol_print_object_total_ht' => 'Total HT',
+			'dol_print_object_total_vat' => 'Total VAT',
+			'dol_print_object_total_ttc' => 'Total TTC',
 			'dol_print_object_number' => 'DOL_PRINT_OBJECT_NUMBER',
 			//'dol_value_object_points' => 'DOL_VALUE_OBJECT_POINTS',
 			'dol_print_order_lines' => 'DOL_PRINT_ORDER_LINES',
@@ -576,6 +583,7 @@ class dolReceiptPrinter extends Printer
 	public function sendToPrinter($object, $templateid, $printerid)
 	{
 		global $conf, $mysoc, $langs, $user;
+		$langs->loadLangs(array("main", "bills", "cashdesk", "companies", "takeposconnector@takeposconnector"));
 		$error = 0;
 		$ret = $this->loadTemplate($templateid);
 
@@ -641,6 +649,17 @@ class dolReceiptPrinter extends Printer
 				switch ($vals[$tplline]['tag']) {
 					case 'DOL_PRINT_TEXT':
 						$this->printer->text($vals[$tplline]['value']);
+						break;
+					case 'DOL_VALUE_OBJECT_STATUS':
+						$print_counter = $object->pos_print_counter + 1;
+						$isADuplicata = ($print_counter >= 2);
+						if ($object->status == $object::STATUS_CLOSED) {
+							if ($isADuplicata) {
+								$this->printer->text('*** DUPLICATA ('.$langs->tr('number').' '.($print_counter - 1).') ***');	// Hard coded string
+							}
+						} else {
+							$this->printer->text('*** '.strtoupper($langs->trans("TemporaryReceipt")).' ***');	// Hard coded string
+						}
 						break;
 					case 'DOL_PRINT_OBJECT_LINES':
 						foreach ($object->lines as $line) {

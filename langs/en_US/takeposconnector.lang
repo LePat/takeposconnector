@@ -22,6 +22,9 @@ ModuleTakeposConnectorName = Takepos Connector
 # Module description 'ModuleTakeposConnectorDesc'
 ModuleTakeposConnectorDesc = Hardware connector for TakePOS
 
+TemporaryReceipt = Temporary receipt
+number = no
+
 Terminal0 = Printer invoices
 DIRECTPRINTWHB_SECURE0 = Use SSL ?
 DIRECTPRINTWHB_IPADDRESS0 = IP Adress/Host name
