@@ -613,6 +613,12 @@ class dolReceiptPrinter extends Printer
 		$this->template = str_replace('{dol_value_mysoc_address}', $mysoc->address, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_zip}', $mysoc->zip, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_town}', $mysoc->town, $this->template);
+		$this->template = str_replace('{dol_value_mysoc_mail}', $mysoc->email, $this->template);
+		$this->template = str_replace('{dol_value_mysoc_phone}', $mysoc->phone, $this->template);
+		$this->template = str_replace('{dol_value_mysoc_phone_mobile}', $mysoc->phone_mobile, $this->template);
+		$this->template = str_replace('{dol_value_mysoc_phone_perso}', $mysoc->phone_perso, $this->template);
+		$this->template = str_replace('{dol_value_mysoc_phone_pro}', $mysoc->phone_pro, $this->template);
+		$this->template = str_replace('{dol_value_mysoc_url}', $mysoc->url, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_country}', $mysoc->country, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_idprof1}', $mysoc->idprof1, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_idprof2}', $mysoc->idprof2, $this->template);
@@ -622,7 +628,6 @@ class dolReceiptPrinter extends Printer
 		$this->template = str_replace('{dol_value_mysoc_idprof6}', $mysoc->idprof6, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_tva_intra}', $mysoc->tva_intra, $this->template);
 		$this->template = str_replace('{dol_value_mysoc_capital}', $mysoc->capital, $this->template);
-		$this->template = str_replace('{dol_value_mysoc_url}', $mysoc->url, $this->template);
 
 		$this->template = str_replace('{dol_value_vendor_firstname}', $user->firstname, $this->template);
 		$this->template = str_replace('{dol_value_vendor_lastname}', $user->lastname, $this->template);
@@ -645,7 +650,6 @@ class dolReceiptPrinter extends Printer
 		} else {
 			$nboflines = count($vals);
 			for ($tplline = 0; $tplline < $nboflines; $tplline++) {
-				//var_dump($vals[$tplline]['value']);
 				switch ($vals[$tplline]['tag']) {
 					case 'DOL_PRINT_TEXT':
 						$this->printer->text($vals[$tplline]['value']);
@@ -661,34 +665,48 @@ class dolReceiptPrinter extends Printer
 							$this->printer->text('*** '.strtoupper($langs->trans("TemporaryReceipt")).' ***');	// Hard coded string
 						}
 						break;
+					case 'DOL_PRINT_LINES_HEADER':
+						$spacestoadd = $nbcharactbyline - strlen($langs->tr("Designation")) - strlen($langs->tr("Qty")) - 2 - strlen($langs->tr("UnitPriceShort")) - strlen($langs->tr("TotalTTCCourt")) - 1;
+						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
+						$this->printer->text($langs->tr("Designation").$spaces.$langs->tr("Qty").'  '.$langs->tr("UnitPriceShort").' '.$langs->tr("TotalTTCCourt").' '.'T'."\n");
+						break;
 					case 'DOL_PRINT_OBJECT_LINES':
+						$tva_map = array();
+						$tva_index = 0;
 						foreach ($object->lines as $line) {
+							if (is_null($tva_map[$line->tva_tx])) {
+								$tva_index++;
+							}
+							$tva_map[$line->tva_tx] = $tva_index;
 							if ($line->fk_product) {
-								$spacestoadd = $nbcharactbyline - strlen($line->product_label) - strlen($line->qty) - 10 - 1;
+								$line->fetch_product();
+								$strQty = str_pad($line->qty, 4, ' ', STR_PAD_LEFT);
+								$strUnitPrice = str_pad(price($line->product->price_ttc), 5, ' ', STR_PAD_LEFT);
+								$strPrice = str_pad(price($line->total_ttc), 5, ' ', STR_PAD_LEFT);
+								$spacestoadd = $nbcharactbyline - strlen($line->product_label) - 1 - strlen($strQty) - 1 - strlen($strUnitPrice) - 1 - strlen($strPrice) - 1 - 1 - 1 ;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->product_label.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
-								//$this->printer->text(strip_tags(htmlspecialchars_decode($line->product_label))."\n");
+								$this->printer->text($line->product_label.$spaces.$strQty.' '.$strUnitPrice.'  '.$strPrice.'  '.$tva_map[$line->tva_tx]."\n");
 							} else {
-								$spacestoadd = $nbcharactbyline - strlen($line->description) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - strlen($line->desc) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->description.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->desc.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 11, ' ', STR_PAD_LEFT).'  '.$tva_map[$line->tva_tx]."\n");
 							}
 						}
 						break;
 					case 'DOL_PRINT_OBJECT_LINES_WITH_NOTES':
 						foreach ($object->lines as $line) {
 							if ($line->fk_product) {
-								$spacestoadd = $nbcharactbyline - strlen($line->ref) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - strlen($line->name) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->ref.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->name.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 								$this->printer->text(strip_tags(htmlspecialchars_decode($line->product_label))."\n");
-								$spacestoadd = $nbcharactbyline - strlen($line->description) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - strlen($line->desc) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->description."\n");
+								$this->printer->text($line->desc."\n");
 							} else {
-								$spacestoadd = $nbcharactbyline - strlen($line->description) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - strlen($line->desc) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->description.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->desc.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 							}
 						}
 						break;
@@ -699,9 +717,9 @@ class dolReceiptPrinter extends Printer
 							$vatarray[$line->tva_tx] += $line->total_tva;
 						}
 						foreach ($vatarray as $vatkey => $vatvalue) {
-							$spacestoadd = $nbcharactbyline - strlen($vatkey) - 12;
+							$spacestoadd = $nbcharactbyline - strlen(price($vatkey)) - 30;
 							$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-							$this->printer->text($spaces.$vatkey.'% '.str_pad(price($vatvalue), 10, ' ', STR_PAD_LEFT)."\n");
+							$this->printer->text('   ('.$tva_map[$vatkey].')'.$spaces.price($vatkey).'% '.str_pad(price($vatvalue), 8, ' ', STR_PAD_LEFT)."\n");
 						}
 						break;
 					case 'DOL_PRINT_OBJECT_TAX1':
@@ -836,16 +854,20 @@ class dolReceiptPrinter extends Printer
 						break;
 					case 'SEPARATOR':
 						$this->printer->setUnderline(true);
-						$this->printer->text(str_repeat(" ", 48));
+						$this->printer->text(str_repeat(" ", $nbcharactbyline));
 						$this->printer->setUnderline(false);
+						$this->printer->text("\n");
+						break;
+					case 'SEPARATOR_THIN':
+						$this->printer->text(str_repeat("_", $nbcharactbyline));
 						$this->printer->text("\n");
 						break;
 					case 'DOL_PRINT_ORDER_LINES':
 						foreach ($object->lines as $line) {
 							if ($line->special_code == $this->orderprinter) {
-								$spacestoadd = $nbcharactbyline - strlen($line->ref) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - strlen($line->name) - strlen($line->qty) - 13 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->ref.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->name.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 13, ' ', STR_PAD_LEFT)."\n");
 								$this->printer->text(strip_tags(htmlspecialchars_decode($line->desc))."\n");
 							}
 						}

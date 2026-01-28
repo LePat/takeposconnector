@@ -24,6 +24,8 @@ ModuleTakeposConnectorDesc = Hardware connector for TakePOS
 
 TemporaryReceipt = Ticket provisoire
 number = n°
+TotalTTCCourt = Tot.TTC
+UnitPriceShort = P.U
 
 WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client

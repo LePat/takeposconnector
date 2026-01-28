@@ -24,6 +24,8 @@ ModuleTakeposConnectorDesc = Hardware connector for TakePOS
 
 TemporaryReceipt = Temporary receipt
 number = no
+TotalTTCCourt = Tot.TTC
+UnitPriceShort = U/P
 
 Terminal = Printer invoices
 DIRECTPRINTWHB_SECURE = Use SSL ?
