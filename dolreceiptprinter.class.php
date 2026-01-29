@@ -643,7 +643,8 @@ class dolReceiptPrinter extends Printer
 		//print '<pre>'.print_r($vals, true).'</pre>';
 		// print ticket
 		$level = 0;
-		$nbcharactbyline = (!empty($conf->global->RECEIPT_PRINTER_NB_CHARACT_BY_LINE) ? $conf->global->RECEIPT_PRINTER_NB_CHARACT_BY_LINE : 48);
+		$terminal = $_SESSION["takeposterminal"][0];
+		$nbcharactbyline = (!empty($conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal}) ? $conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal} : 48);
 		$ret = $this->initPrinter($printerid);
 		if ($ret > 0) {
 			setEventMessages($this->error, $this->errors, 'errors');
@@ -673,6 +674,7 @@ class dolReceiptPrinter extends Printer
 					case 'DOL_PRINT_OBJECT_LINES':
 						$tva_map = array();
 						$tva_index = 0;
+						$lineDescMaxLength = (!empty($conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal}) ? $conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal} : 30);
 						foreach ($object->lines as $line) {
 							if (is_null($tva_map[$line->tva_tx])) {
 								$tva_index++;
@@ -680,16 +682,18 @@ class dolReceiptPrinter extends Printer
 							$tva_map[$line->tva_tx] = $tva_index;
 							if ($line->fk_product) {
 								$line->fetch_product();
+								$strProductLabel = substr($line->product_label, 0, $lineDescMaxLength);
 								$strQty = str_pad($line->qty, 4, ' ', STR_PAD_LEFT);
 								$strUnitPrice = str_pad(price($line->product->price_ttc), 5, ' ', STR_PAD_LEFT);
 								$strPrice = str_pad(price($line->total_ttc), 5, ' ', STR_PAD_LEFT);
-								$spacestoadd = $nbcharactbyline - strlen($line->product_label) - 1 - strlen($strQty) - 1 - strlen($strUnitPrice) - 1 - strlen($strPrice) - 1 - 1 - 1 ;
+								$spacestoadd = $nbcharactbyline - strlen($strProductLabel) - 1 - strlen($strQty) - 1 - strlen($strUnitPrice) - 1 - strlen($strPrice) - 1 - 1 - 1 ;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->product_label.$spaces.$strQty.' '.$strUnitPrice.'  '.$strPrice.'  '.$tva_map[$line->tva_tx]."\n");
+								$this->printer->text($strProductLabel.$spaces.$strQty.' '.$strUnitPrice.'  '.$strPrice.'  '.$tva_map[$line->tva_tx]."\n");
 							} else {
-								$spacestoadd = $nbcharactbyline - strlen($line->desc) - strlen($line->qty) - 10 - 1;
+								$strLineDesc = substr($line->desc, 0, $lineDescMaxLength);
+								$spacestoadd = $nbcharactbyline - strlen($strLineDesc) - strlen($line->qty) - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->desc.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 11, ' ', STR_PAD_LEFT).'  '.$tva_map[$line->tva_tx]."\n");
+								$this->printer->text($strLineDesc.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 11, ' ', STR_PAD_LEFT).'  '.$tva_map[$line->tva_tx]."\n");
 							}
 						}
 						break;
@@ -902,7 +906,7 @@ class dolReceiptPrinter extends Printer
 						}
 						break;
 					case 'DOL_VALUE_PLACE':
-							$sql = "SELECT floor, label FROM ".MAIN_DB_PREFIX."takepos_floor_tables where rowid=".((int) str_replace(")", "", str_replace("(PROV-POS".$_SESSION["takeposterminal"]."-", "", $object->ref)));
+							$sql = "SELECT floor, label FROM ".MAIN_DB_PREFIX."takepos_floor_tables where rowid=".((int) str_replace(")", "", str_replace("(PROV-POS".$terminal."-", "", $object->ref)));
 							$resql = $this->db->query($sql);
 							$obj = $this->db->fetch_object($resql);
 						if ($obj) {

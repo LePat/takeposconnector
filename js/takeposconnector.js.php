@@ -208,6 +208,20 @@ function WebSocketWeigh(options) {
 				console.log(currentStateClient);
 				ENQ();
 			}
+			if (response.type == 'NAK' && currentStateClient == ClientStates.REQUESTED_WEIGHING_SCALE) {
+				webSocketTakePOS.send(CheckoutDialog06.formatMessage(CheckoutDialog06.createRecord08()));
+			}
+			if (response.type == 'RECORD_09' && currentStateClient == ClientStates.REQUESTED_WEIGHING_SCALE) {
+				// Poids inchangé depuis la dernière pesée
+				if (response.data.statusCode == '21') {
+					currentStateClient = ClientStates.WAITING_FOR_COMMAND;
+					console.log(currentStateClient);
+					currentCallback(currentWeight);
+				}
+				// Signaler l'erreur à l'utilisateur 
+				// TODO demander de saisir le poids
+				currentErrorCallback(response.data.errorMessage);
+			}
 			if (response.type == 'RECORD_02' && currentStateClient == ClientStates.REQUESTED_WEIGHING_SCALE) {
 				currentWeight = response.data.weight;
 				currentStateClient = ClientStates.WAITING_FOR_COMMAND;
@@ -293,10 +307,12 @@ var ClientStates = {
 
 var currentWeight = 0;
 var currentCallback = null;
+var currentErrorCallback = null;
 
-function askForWeight(unitPrice, callback) {
+function askForWeight(unitPrice, callback, errorCallback) {
 	currentStateClient = ClientStates.SENDING_UNITPRICE_BEFORE_WEIGHING;
 	currentCallback = callback;
+	currentErrorCallback = errorCallback;
 	console.log(currentStateClient);
 	sendUnitPrice(unitPrice);
 }
@@ -401,8 +417,8 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 		} else {
 			echo "12212";
 		}
-		if ($conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse}) {
-			echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};
+		if ($conf->global->{'DIRECTPRINTWHB_PRINTER_SERVICE_NAME' . $terminaltouse}) {
+			echo $conf->global->{'DIRECTPRINTWHB_PRINTER_SERVICE_NAME' . $terminaltouse};
 		} else {
 			echo "/print/INVOICE";
 		} ?>",

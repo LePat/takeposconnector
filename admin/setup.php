@@ -115,6 +115,7 @@ $item->cssClass = 'minwidth500';
 // Select printer to use with terminal
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolreceiptprinter.class.php';
 $printer = new dolReceiptPrinter($db);
+
 $printer->listPrintersTemplates();
 $templates = array();
 foreach ($printer->listprinterstemplates as $key => $value) {
@@ -124,6 +125,7 @@ foreach ($printer->listprinterstemplates as $key => $value) {
 for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
 	$item = $formSetup->newItem('Terminal'.$indexTerminal)->setAsTitle();
 	$item->nameText = $langs->trans('Terminal').' '.$indexTerminal;
+	
 	$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE'.$indexTerminal);
 	$item->nameText = $langs->trans('DIRECTPRINTWHB_SECURE');
 	$fieldOptions = array(
@@ -131,15 +133,32 @@ for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINAL
 		'non' => $langs->trans('NON'),
 	);
 	$item->setAsYesNo($fieldOptions);
+	
 	$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS'.$indexTerminal);
 	$item->nameText = $langs->trans('DIRECTPRINTWHB_IPADDRESS');
+	$item->fieldAttr['placeholder'] = 'localhost';
+	
 	$item = $formSetup->newItem('DIRECTPRINTWHB_PORT'.$indexTerminal);
 	$item->nameText = $langs->trans('DIRECTPRINTWHB_PORT');
+	$item->fieldAttr['placeholder'] = '12212';
+	
+	$item = $formSetup->newItem('DIRECTPRINTWHB_PRINTER_SERVICE_NAME'.$indexTerminal);
+	$item->nameText = $langs->trans('DIRECTPRINTWHB_PRINTER_SERVICE_NAME');
+	$item->fieldAttr['placeholder'] = '/printer';
+	
 	$item = $formSetup->newItem('DIRECTPRINTWHB_TPPRINTERID'.$indexTerminal);
 	$item->nameText = $langs->trans('DIRECTPRINTWHB_TPPRINTERID');
+	$item->fieldAttr['placeholder'] = 'INVOICE';
+	
 	$item = $formSetup->newItem('TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES'.$indexTerminal);
 	$item->nameText = $langs->trans('TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES');
 	$item->setAsSelect($templates);
+	
+	$item = $formSetup->newItem('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$indexTerminal);
+	$item->nameText = $langs->trans('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH');
+	
+	$item = $formSetup->newItem('RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$indexTerminal);
+	$item->nameText = $langs->trans('RECEIPT_PRINTER_NB_CHARACT_BY_LINE');
 }
 
 
