@@ -486,6 +486,18 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 						if (button["attributes"]["onclick"].value.includes("DolibarrOpenDrawer")) {
 							button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrOpenDrawer();";
 						}
+						<?php if ($conf->global->MAIN_MODULE_TAKEPOSASORDER) { ?>
+						// Activer ou désactiver le bouton SAVE_AS_ORDER
+						if (button["attributes"]["onclick"].value.includes("SaveAsCommand();")) {
+							if ($("#tablelines")[0].tBodies[0].rows[1].childNodes[0].innerHTML.includes("<?php echo $langs->trans("Empty"); ?>")) {
+								button.disabled = true;
+								button.classList.add("actionbuttondisabled");
+							} else {
+								button.disabled = false;
+								button.classList.remove("actionbuttondisabled");
+							}
+						}
+						<?php } ?>
 					}
 					// Substitution pour le bouton d'impression après paiement
 					var buttonPrint = document.getElementById("buttonprint");
