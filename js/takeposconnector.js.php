@@ -426,20 +426,18 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 		onConnect: function () {
 			$.jnotify("<?php echo $langs->trans('Connected');?>",
 				"info",
-				{timeout: 5},
+				{ timeout: 5 },
 				{
-					remove: function () {
-					}
+					remove: function () { }
 				});
 			console.log('Connected');
 		},
 		onDisconnect: function () {
 			$.jnotify("<?php echo $langs->trans('Disconnected');?>",
 				"error",
-				{timeout: 5},
+				{ timeout: 5 },
 				{
-					remove: function () {
-					}
+					remove: function () {}
 				});
 			console.log('Disconnected');
 		},
@@ -449,8 +447,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			//	"info",
 			//	{timeout: 5},
 			//	{
-			//		remove: function () {
-			//		}
+			//		remove: function () { }
 			//	});
 
 			//parent.jQuery.colorbox.close();
@@ -498,6 +495,8 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrinting"))) {
 						buttonPrint["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
+						buttonPrint.setAttribute("class", "butAction");
+						buttonPrint.nextElementSibling.setAttribute("class", "butAction");
 					}
 				}
 			};
