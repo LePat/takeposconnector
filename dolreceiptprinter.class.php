@@ -643,8 +643,9 @@ class dolReceiptPrinter extends Printer
 		//print '<pre>'.print_r($vals, true).'</pre>';
 		// print ticket
 		$level = 0;
-		$terminal = $_SESSION["takeposterminal"][0];
+		$terminal = $_SESSION["takeposterminal"];
 		$nbcharactbyline = (!empty($conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal}) ? $conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal} : 48);
+		$lineDescMaxLength = (!empty($conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal}) ? $conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal} : 30);
 		$ret = $this->initPrinter($printerid);
 		if ($ret > 0) {
 			setEventMessages($this->error, $this->errors, 'errors');
@@ -667,14 +668,18 @@ class dolReceiptPrinter extends Printer
 						}
 						break;
 					case 'DOL_PRINT_LINES_HEADER':
-						$spacestoadd = $nbcharactbyline - strlen($langs->tr("Designation")) - strlen($langs->tr("Qty")) - 2 - strlen($langs->tr("UnitPriceShort")) - strlen($langs->tr("TotalTTCCourt")) - 1;
+						$strHeaderDesignation = str_pad($langs->tr("Designation"), $lineDescMaxLength, ' ', STR_PAD_RIGHT);
+						$strHeaderQty = str_pad($langs->tr("Qty"), 4, ' ', STR_PAD_LEFT);
+						$strHeaderUnitPrice = str_pad($langs->tr("UnitPriceShort"), 8, ' ', STR_PAD_LEFT);
+						$strHeaderTotalTTC = str_pad($langs->tr("TotalTTCCourt"), 8, ' ', STR_PAD_LEFT);
+						$strHeaderTax = str_pad('T', 3, ' ', STR_PAD_LEFT);
+						$spacestoadd = $nbcharactbyline - strlen($strHeaderDesignation) - strlen($strHeaderQty) - strlen($strHeaderUnitPrice) - strlen($strHeaderTotalTTC) - strlen($strHeaderTax) - 1;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($langs->tr("Designation").$spaces.$langs->tr("Qty").'  '.$langs->tr("UnitPriceShort").' '.$langs->tr("TotalTTCCourt").' '.'T'."\n");
+						$this->printer->text($strHeaderDesignation.$spaces.$strHeaderQty.$strHeaderUnitPrice.$strHeaderTotalTTC.$strHeaderTax."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_LINES':
 						$tva_map = array();
 						$tva_index = 0;
-						$lineDescMaxLength = (!empty($conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal}) ? $conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal} : 30);
 						foreach ($object->lines as $line) {
 							if (is_null($tva_map[$line->tva_tx])) {
 								$tva_index++;
@@ -682,13 +687,14 @@ class dolReceiptPrinter extends Printer
 							$tva_map[$line->tva_tx] = $tva_index;
 							if ($line->fk_product) {
 								$line->fetch_product();
-								$strProductLabel = substr($line->product_label, 0, $lineDescMaxLength);
+								$strProductLabel = str_pad(substr($line->product_label, 0, $lineDescMaxLength), $lineDescMaxLength, ' ', STR_PAD_RIGHT);
 								$strQty = str_pad($line->qty, 4, ' ', STR_PAD_LEFT);
-								$strUnitPrice = str_pad(price($line->product->price_ttc), 5, ' ', STR_PAD_LEFT);
-								$strPrice = str_pad(price($line->total_ttc), 5, ' ', STR_PAD_LEFT);
-								$spacestoadd = $nbcharactbyline - strlen($strProductLabel) - 1 - strlen($strQty) - 1 - strlen($strUnitPrice) - 1 - strlen($strPrice) - 1 - 1 - 1 ;
+								$strUnitPrice = str_pad(price($line->product->price_ttc), 8, ' ', STR_PAD_LEFT);
+								$strPrice = str_pad(price($line->total_ttc), 8, ' ', STR_PAD_LEFT);
+								$strTax = str_pad($tva_map[$line->tva_tx], 3, ' ', STR_PAD_LEFT);
+								$spacestoadd = $nbcharactbyline - strlen($strProductLabel) - strlen($strQty) - strlen($strUnitPrice) - strlen($strPrice) - strlen($strTax) - 1 ;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($strProductLabel.$spaces.$strQty.' '.$strUnitPrice.'  '.$strPrice.'  '.$tva_map[$line->tva_tx]."\n");
+								$this->printer->text($strProductLabel.$spaces.$strQty.$strUnitPrice.$strPrice.$strTax."\n");
 							} else {
 								$strLineDesc = substr($line->desc, 0, $lineDescMaxLength);
 								$spacestoadd = $nbcharactbyline - strlen($strLineDesc) - strlen($line->qty) - 10 - 1;
