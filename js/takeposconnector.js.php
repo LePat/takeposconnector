@@ -475,7 +475,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 						console.log("L'attribut '" + mutation.attributeName + "' a été modifié.");
 					}
 					// Substitution des fonctions Javascript pour les boutons d'action
-					var buttons = document.querySelectorAll(".actionbutton");
+					var buttons = document.querySelectorAll(".actionbutton, .actionbuttondisabled");
 					for (var button of buttons) {
 						if (button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting") ||
 							button["attributes"]["onclick"].value.includes("TakeposConnector") ||
@@ -488,13 +488,17 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 						}
 						<?php if ($conf->global->MAIN_MODULE_TAKEPOSASORDER) { ?>
 						// Activer ou désactiver le bouton SAVE_AS_ORDER
-						if (button["attributes"]["onclick"].value.includes("SaveAsCommand();")) {
+						console.log("button event: " + button["attributes"]["onclick"].value);
+						if (button["attributes"]["onclick"].value.includes("SaveAsCommand();") ||
+							button["attributes"]["onclick"].value.includes("DirectPayment();")) {
 							if ($("#tablelines")[0].tBodies[0].rows[1].childNodes[0].innerHTML.includes("<?php echo $langs->trans("Empty"); ?>")) {
 								button.disabled = true;
+								button.classList.remove("actionbutton");
 								button.classList.add("actionbuttondisabled");
 							} else {
 								button.disabled = false;
 								button.classList.remove("actionbuttondisabled");
+								button.classList.add("actionbutton");
 							}
 						}
 						<?php } ?>

@@ -1,0 +1,20 @@
+
+button.actionbuttondisabled {
+    background: #B1B1B1 !important;
+	color: #222;
+	/* border: 2px solid #EEE; */
+	min-height: 40px;
+	border-radius: 4px;
+	padding: 12px;
+	display: inline-block;
+	position: relative;
+	line-height: normal;
+	cursor: pointer;
+	vertical-align: middle;
+	text-align: center;
+	overflow: visible; /* removes extra width in IE */
+	width: calc(33.33% - 2px);
+	height: calc(25% - 2px);
+	margin: 1px;
+	border-width: 0;
+}
