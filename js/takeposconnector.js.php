@@ -458,6 +458,8 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 
 	//TAKEPOS Action button
 	if (url.includes('/takepos/index.php')) {
+	
+		idproduct = "";
 		
 		$(document).ready(function() {
 			// Selectionne le noeud dont les mutations seront observées
