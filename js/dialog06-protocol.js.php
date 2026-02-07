@@ -1,4 +1,10 @@
 <?php
+if (!(
+	str_contains($_SERVER['HTTP_REFERER'], "/takepos/index.php") ||
+	str_contains($_SERVER['HTTP_REFERER'], "/takepos/invoice.php") ||
+	str_contains($_SERVER['HTTP_REFERER'], "/facture/card.php"))) {
+	return;
+}
 header('Content-Type: application/javascript');
 ?>
 /**

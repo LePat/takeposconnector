@@ -18,6 +18,13 @@
  * Library javascript to enable Browser notifications
  */
 
+if (!(
+	str_contains($_SERVER['HTTP_REFERER'], "/takepos/index.php") ||
+	str_contains($_SERVER['HTTP_REFERER'], "/takepos/invoice.php") ||
+	str_contains($_SERVER['HTTP_REFERER'], "facture/card.php"))) {
+	return;
+}
+
 if (!defined('NOREQUIREUSER')) {
 	define('NOREQUIREUSER', '1');
 }
