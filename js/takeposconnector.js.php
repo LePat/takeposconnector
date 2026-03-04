@@ -490,7 +490,8 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 							button["attributes"]["onclick"].value.includes("TakeposConnector") ||
 							button["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
 							button["attributes"]["onclick"].value.includes("TakeposPrinting") ||
-							button["attributes"]["onclick"].value.includes("PrintByESCPOSOld")) {
+							button["attributes"]["onclick"].value.includes("PrintByESCPOSOld") ||
+							button["attributes"]["onclick"].value.includes("PrintByBrowser")) {
 							button["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
 						}
 						if (button["attributes"]["onclick"].value.includes("DolibarrOpenDrawer")) {
@@ -520,7 +521,8 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposConnector") ||
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrinting") ||
-							buttonPrint["attributes"]["onclick"].value.includes("PrintByESCPOSOld"))) {
+							buttonPrint["attributes"]["onclick"].value.includes("PrintByESCPOSOld") ||
+							buttonPrint["attributes"]["onclick"].value.includes("PrintByBrowser"))) {
 						buttonPrint["attributes"]["onclick"].value = "DirectPrintWHBDolibarrTakeposPrinting(placeid);";
 						buttonPrint.setAttribute("class", "butAction");
 						buttonPrint.nextElementSibling.setAttribute("class", "butAction");
