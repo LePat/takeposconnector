@@ -657,6 +657,12 @@ class dolReceiptPrinter extends Printer
 						$this->printer->text($vals[$tplline]['value']);
 						break;
 					case 'DOL_VALUE_OBJECT_STATUS':
+						// Increase counter by 1 ici car ce n'est plus fait dans le blockedlog/ajax/block-add.php comme avant
+						global $db;
+						$sql = "UPDATE ".MAIN_DB_PREFIX."facture SET pos_print_counter = pos_print_counter + 1";
+						$sql .= " WHERE rowid = ".((int) $object->id);
+						$db->query($sql);
+						
 						$print_counter = $object->pos_print_counter + 1;
 						$isADuplicata = ($print_counter >= 2);
 						if ($object->status == $object::STATUS_CLOSED) {
