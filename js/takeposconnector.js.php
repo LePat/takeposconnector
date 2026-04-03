@@ -202,6 +202,11 @@ function WebSocketWeigh(options) {
     var settings = Object.assign({}, defaults, options);
     var websocket;
     var buffer = '';
+    
+    var onError = function(evt) {
+    	console.log("Error: " + evt);
+    	reconnect();
+    }
 
     var onMessage = function (evt) {
         var chr = evt.data;
@@ -278,6 +283,7 @@ function WebSocketWeigh(options) {
         websocket.onopen = onConnect;
         websocket.onclose = onDisconnect;
         websocket.onmessage = onMessage;
+        websocket.onerror = onError;
     };
 
     var reconnect = function () {
@@ -291,7 +297,7 @@ function WebSocketWeigh(options) {
 
 var globalWeight = null;
 
-var webSocketWeight = WebSocketWeigh({
+var webSocketWeight = new WebSocketWeigh({
 	url: '<?php echo $conf->global->WEIGHINGSCALE_WEBSOCKET_URL; ?>',
     onUpdate: function (weight, stable) {
     	globalWeight = weight;
@@ -321,17 +327,24 @@ function askForWeight(unitPrice, callback, errorCallback) {
 	currentCallback = callback;
 	currentErrorCallback = errorCallback;
 	console.log(currentStateClient);
-	sendUnitPrice(unitPrice);
+	startWeighingSequence(unitPrice);
+}
+
+function startWeighingSequence(unitPrice) {
+	if (webSocketWeight !== undefined && webSocketWeight.readyState === WebSocket.OPEN) {
+		sendUnitPrice(unitPrice);
+	} else {
+		currentErrorCallback("Cannot send unitPrice to scale");
+		currentCallback();
+	}
 }
 
 function sendUnitPrice(price) {
-	if (webSocketWeight !== undefined) {
-		webSocketWeight.send(
-			String.fromCharCode(0x04, 0x02, 0x30, 0x31, 0x1b) +
-			CheckoutDialog06.fromFloatAsStringToDialog06(price) +
-			String.fromCharCode(0x1b, 0x03)
-		);
-	}
+	webSocketWeight.send(
+		String.fromCharCode(0x04, 0x02, 0x30, 0x31, 0x1b) +
+		CheckoutDialog06.fromFloatAsStringToDialog06(price) +
+		String.fromCharCode(0x1b, 0x03)
+	);
 }
 
 function ENQ() {
