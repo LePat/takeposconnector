@@ -111,8 +111,8 @@ class modTakeposConnector extends DolibarrModules
 			),
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => array(
-				'/takeposconnector/js/takeposconnector.js.php',
-				'/takeposconnector/js/dialog06-protocol.js.php',
+				//'/takeposconnector/js/takeposconnector.js.php',
+				//'/takeposconnector/js/dialog06-protocol.js.php',
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			'hooks' => array(

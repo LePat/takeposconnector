@@ -18,13 +18,6 @@
  * Library javascript to enable Browser notifications
  */
 
-if (!(
-	str_contains($_SERVER['HTTP_REFERER'], "/takepos/index.php") ||
-	str_contains($_SERVER['HTTP_REFERER'], "/takepos/invoice.php") ||
-	str_contains($_SERVER['HTTP_REFERER'], "facture/card.php"))) {
-	return;
-}
-
 if (!defined('NOREQUIREUSER')) {
 	define('NOREQUIREUSER', '1');
 }
@@ -491,11 +484,13 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			// Fonction callback à éxécuter quand une mutation est observée
 			var callback = function (mutationsList) {
 				for (var mutation of mutationsList) {
+					/*
 					if (mutation.type == "childList") {
 						console.log("Un noeud enfant a été ajouté ou supprimé.");
 					} else if (mutation.type == "attributes") {
 						console.log("L'attribut '" + mutation.attributeName + "' a été modifié.");
 					}
+					*/
 					// Substitution des fonctions Javascript pour les boutons d'action
 					var buttons = document.querySelectorAll(".actionbutton, .actionbuttondisabled");
 					for (var button of buttons) {
@@ -512,7 +507,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 						}
 						<?php if ($conf->global->MAIN_MODULE_TAKEPOSASORDER) { ?>
 						// Activer ou désactiver le bouton SAVE_AS_ORDER
-						console.log("button event: " + button["attributes"]["onclick"].value);
+						//console.log("button event: " + button["attributes"]["onclick"].value);
 						if (button["attributes"]["onclick"].value.includes("SaveAsCommand();") ||
 							button["attributes"]["onclick"].value.includes("DirectPayment();")) {
 							if ($("#tablelines")[0].tBodies[0].rows[1].childNodes[0].innerHTML.includes("<?php echo $langs->trans("Empty"); ?>")) {

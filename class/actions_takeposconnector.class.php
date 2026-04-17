@@ -46,6 +46,20 @@ class ActionsTakeposConnector extends CommonHookActions
 		$this->db = $db;
 	}
 	
+	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager) {
+		if ($parameters['currentcontext'] == 'takeposfrontend') {
+			$this->resprints = '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/takeposconnector.js.php"></script>';
+		}
+	}
+	
+	/**
+	 * Rendre l'unité des produits disponible pour déterminer s'il faut les peser ou non.
+	 * 
+	 * @param $parameters
+	 * @param $object
+	 * @param $action
+	 * @param $hookmanager
+	 */
 	public function completeJSProductDisplay($parameters, &$object, &$action, $hookmanager) {
 	    if ($parameters['caller'] == 'loadProducts') {
 	        $this->resprints = '
