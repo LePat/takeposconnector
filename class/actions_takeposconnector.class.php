@@ -49,7 +49,7 @@ class ActionsTakeposConnector extends CommonHookActions
 	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager) {
 		if ($parameters['currentcontext'] == 'takeposfrontend') {
 			$this->resprints = '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/takeposconnector.js.php"></script>';
-			$this->resprints .= PHP_EOL . '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/dialog06-protocol.js.php"></script>';
+			$this->resprints .= PHP_EOL . '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/dialog06-protocol.js"></script>';
 		}
 	}
 	

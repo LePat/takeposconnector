@@ -1,6 +1,3 @@
-<?php
-header('Content-Type: application/javascript');
-?>
 /**
  * Implémentation du protocole Checkout-Dialog 06 (Bizerba)
  * Communication entre terminal de caisse (POS) et balance
