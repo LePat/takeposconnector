@@ -335,7 +335,7 @@ function startWeighingSequence(unitPrice) {
 function sendUnitPrice(price) {
 	webSocketWeight.send(
 		String.fromCharCode(0x04, 0x02, 0x30, 0x31, 0x1b) +
-		CheckoutDialog06.fromFloatAsStringToDialog06(price) +
+		CheckoutDialog06.fromPriceAsStringToDialog06(price) +
 		String.fromCharCode(0x1b, 0x03)
 	);
 }

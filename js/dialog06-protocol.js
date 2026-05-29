@@ -68,7 +68,7 @@ class CheckoutDialog06 {
 	}
 
 	// ============================================================
-	// ENREGISTREMENTS POS → BALANCE
+	// ENREGISTREMENTS POS -> BALANCE
 	// ============================================================
 
 	/**
@@ -81,7 +81,7 @@ class CheckoutDialog06 {
 			this.STX,
 			...this.stringToBytes('01'),
 			this.ESC,
-			...this.stringToBytes(this.fromFloatToDialog06(price)),
+			...this.stringToBytes(this.fromPriceToDialog06(price)),
 			this.ESC,
 			this.ETX
 		];
@@ -98,7 +98,7 @@ class CheckoutDialog06 {
 			this.STX,
 			...this.stringToBytes('03'),
 			this.ESC,
-			...this.stringToBytes(this.fromFloatToDialog06(price)),
+			...this.stringToBytes(this.fromPriceToDialog06(price)),
 			this.ESC,
 			...this.stringToBytes(this.fromFloatToDialog06(tare, true)),
 			this.ETX
@@ -117,7 +117,7 @@ class CheckoutDialog06 {
 			this.STX,
 			...this.stringToBytes('04'),
 			this.ESC,
-			...this.stringToBytes(this.fromFloatToDialog06(price)),
+			...this.stringToBytes(this.fromPriceToDialog06(price)),
 			this.ESC,
 			...this.stringToBytes(textPadded),
 			this.ETX
@@ -137,7 +137,7 @@ class CheckoutDialog06 {
 			this.STX,
 			...this.stringToBytes('05'),
 			this.ESC,
-			...this.stringToBytes(this.fromFloatToDialog06(price)),
+			...this.stringToBytes(this.fromPriceToDialog06(price)),
 			this.ESC,
 			...this.stringToBytes(this.fromFloatToDialog06(tare, true)),
 			this.ESC,
@@ -223,7 +223,7 @@ class CheckoutDialog06 {
 	}
 
 	// ============================================================
-	// PARSERS POUR ENREGISTREMENTS BALANCE → POS
+	// PARSERS POUR ENREGISTREMENTS BALANCE -> POS
 	// ============================================================
 
 	/**
@@ -357,6 +357,22 @@ class CheckoutDialog06 {
 			numberSplitted[0].padStart((tare ? 1 : 3), "0") + 
 			(numberSplitted.length == 2 ? numberSplitted[1].padEnd(3, "0") : "000");
 		return nombreDialog06;
+	}
+	
+	/**
+	 * Encode un prix unitaire au format Dialog-06 (6 chiffres, 2 décimales fixes).
+	 */
+    static fromPriceToDialog06(price) {
+        var cents = Math.round(price * 100);
+        return cents.toString().padStart(6, "0");
+    }
+
+	/**
+	 * Transforme un prix représenté dans une chaine de caractères en nombre du protocole.
+	 */
+	static fromPriceAsStringToDialog06(number) {
+		var flottant = parseFloat(number);
+		return this.fromPriceToDialog06(flottant);
 	}
 
 	/**
