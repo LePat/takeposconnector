@@ -61,10 +61,14 @@ class ActionsTakeposConnector extends CommonHookActions
 	 * @param $action
 	 * @param $hookmanager
 	 */
-	public function completeJSProductDisplay($parameters, &$object, &$action, $hookmanager) {
+	public function completeJSProductDisplay($parameters, &$object, &$action, $hookmanager) {		
 	    if ($parameters['caller'] == 'loadProducts') {
+	    	$term = empty($_SESSION['takeposterminal']) ? 1 : $_SESSION['takeposterminal'];
+	    	$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $term);
+	    	
 	        $this->resprints = '
 				$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
+				$("#prodiv"+ishow).data("price-ttc", data[idata][\'multiprices_ttc\'][' . $socid . ']);
 		';
 	    }
 	}
