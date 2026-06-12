@@ -582,7 +582,7 @@ class dolReceiptPrinter extends Printer
 	 */
 	public function sendToPrinter($object, $templateid, $printerid)
 	{
-		global $conf, $mysoc, $langs, $user;
+		global $conf, $db, $mysoc, $langs, $user;
 		$langs->loadLangs(array("main", "bills", "cashdesk", "companies", "takeposconnector@takeposconnector"));
 		$error = 0;
 		$ret = $this->loadTemplate($templateid);
@@ -646,6 +646,11 @@ class dolReceiptPrinter extends Printer
 		$terminal = $_SESSION["takeposterminal"];
 		$nbcharactbyline = (!empty($conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal}) ? $conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal} : 48);
 		$lineDescMaxLength = (!empty($conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal}) ? $conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal} : 30);
+		
+		$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $terminal);
+		$customer = new Societe($db);
+		$customer->fetch($socid);
+		
 		$ret = $this->initPrinter($printerid);
 		if ($ret > 0) {
 			setEventMessages($this->error, $this->errors, 'errors');
@@ -695,7 +700,7 @@ class dolReceiptPrinter extends Printer
 								$line->fetch_product();
 								$strProductLabel = str_pad(substr($line->product_label, 0, $lineDescMaxLength), $lineDescMaxLength, ' ', STR_PAD_RIGHT);
 								$strQty = str_pad($line->qty, 4, ' ', STR_PAD_LEFT);
-								$strUnitPrice = str_pad(price($line->product->price_ttc), 8, ' ', STR_PAD_LEFT);
+								$strUnitPrice = str_pad(price($line->product->multiprices_ttc[$customer->price_level]), 8, ' ', STR_PAD_LEFT);
 								$strPrice = str_pad(price($line->total_ttc), 8, ' ', STR_PAD_LEFT);
 								$strTax = str_pad($tva_map[$line->tva_tx], 3, ' ', STR_PAD_LEFT);
 								$spacestoadd = $nbcharactbyline - strlen($strProductLabel) - strlen($strQty) - strlen($strUnitPrice) - strlen($strPrice) - strlen($strTax) - 1 ;
