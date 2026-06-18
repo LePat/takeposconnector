@@ -25,6 +25,7 @@
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 
 /**
  * Class ActionsTakePOSAsOrder
@@ -48,8 +49,9 @@ class ActionsTakeposConnector extends CommonHookActions
 	
 	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager) {
 		if ($parameters['currentcontext'] == 'takeposfrontend') {
-			$this->resprints = '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/takeposconnector.js.php"></script>';
-			$this->resprints .= PHP_EOL . '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/dialog06-protocol.js"></script>';
+			$this->resprints = '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/takeposconnector.js.php"></script>' . PHP_EOL;
+			$this->resprints .= '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/dialog06-protocol.js"></script>' . PHP_EOL;
+			$this->resprints .= '<link rel="stylesheet" type="text/css" href="' . DOL_URL_ROOT . '/custom/takeposconnector/css/takeposconnector.css">' . PHP_EOL;
 		}
 	}
 	
@@ -61,14 +63,18 @@ class ActionsTakeposConnector extends CommonHookActions
 	 * @param $action
 	 * @param $hookmanager
 	 */
-	public function completeJSProductDisplay($parameters, &$object, &$action, $hookmanager) {		
+	public function completeJSProductDisplay($parameters, &$object, &$action, $hookmanager) {
 	    if ($parameters['caller'] == 'loadProducts') {
 	    	$term = empty($_SESSION['takeposterminal']) ? 1 : $_SESSION['takeposterminal'];
 	    	$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $term);
 	    	
+	    	global $db;
+	    	$customer = new Societe($db);
+	    	$customer->fetch($socid);
+	    	
 	        $this->resprints = '
 				$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
-				$("#prodiv"+ishow).data("price-ttc", data[idata][\'multiprices_ttc\'][' . $socid . ']);
+				$("#prodiv"+ishow).data("price-ttc", data[idata][\'multiprices_ttc\'][' . $customer->price_level . ']);
 		';
 	    }
 	}
