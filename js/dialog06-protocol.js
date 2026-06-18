@@ -192,6 +192,19 @@ class CheckoutDialog06 {
 		data.push(this.ETX);
 		return data;
 	}
+	
+	/**
+	 * Record 11: Demande de checksum
+	 */
+	static createRecord11() {
+		return [
+			this.STX,
+			...this.stringToBytes('11'),
+			this.ESC,
+			...this.stringToBytes('2EF'),
+			this.ETX
+		];
+	}
 
 	/**
 	 * Record 20: Active/désactive le numéro de version logique
@@ -336,6 +349,14 @@ class CheckoutDialog06 {
 		}
 
 		return { type: 'UNKNOWN', bytes };
+	}
+
+	/**
+	 * Transforme un prix du protocole (centimes, 2 décimales) en flottant.
+	 * Inverse de fromPriceToDialog06.
+	 */
+	static fromDialog06ToPrice(data) {
+		return parseInt(data) / 100;
 	}
 
 	/**
