@@ -113,7 +113,11 @@ $item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pou
 $item->cssClass = 'minwidth500';
 
 // Select printer to use with terminal
-require_once DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php';
+if(file_exists(DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php')) {
+	require_once DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php';
+} else {
+	require_once DOL_DOCUMENT_ROOT.'/core/class/dolreceiptprinter.class.php';
+}
 $printer = new dolReceiptPrinter($db);
 
 $printer->listPrintersTemplates();

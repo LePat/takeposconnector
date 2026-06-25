@@ -71,11 +71,19 @@ class ActionsTakeposConnector extends CommonHookActions
 	    	global $db;
 	    	$customer = new Societe($db);
 	    	$customer->fetch($socid);
+	    	$priceLevel = $customer->price_level;
 	    	
-	        $this->resprints = '
-				$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
-				$("#prodiv"+ishow).data("price-ttc", data[idata][\'multiprices_ttc\'][' . $customer->price_level . ']);
-		';
+	    	if ($priceLevel) {
+		        $this->resprints = '
+					$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
+					$("#prodiv"+ishow).data("price-ttc", data[idata][\'multiprices_ttc\'][' . $customer->price_level . ']);
+				';
+	    	} else {
+	    		$this->resprints = '
+					$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
+					$("#prodiv"+ishow).data("price-ttc", data[idata][\'price_ttc\']);
+				';
+	    	}
 	    }
 	}
 }
