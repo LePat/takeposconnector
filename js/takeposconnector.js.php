@@ -564,13 +564,15 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			data: {token: '<?php echo currentToken(); ?>'},
 			url: "<?php print dol_buildpath('/takeposconnector', 2) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
 			success: function (getdata) {
-				printService.submitRaw(
-				//{
-				//	"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
-				//	"raw_content": "\"" + getdata + "\""
-				//}
-				getdata
-				);
+				<?php  if ("TEST" == $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse}) { ?>
+				printService.submit(
+				{
+					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
+					"raw_content": "\"" + getdata + "\""
+				});
+				<?php } else { ?>
+				printService.submitRaw(getdata);
+				<?php } ?>
 				console.log('Call /blockedlog/ajax/block-add on output of receipt.php.');
 				$.post('<?php echo DOL_URL_ROOT; ?>/blockedlog/ajax/block-add.php', {
 					id: id,
