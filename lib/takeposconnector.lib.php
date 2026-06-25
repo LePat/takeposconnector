@@ -66,3 +66,118 @@ function takeposconnectorAdminPrepareHead()
 
 	return $head;
 }
+
+/**
+ * Get a terminal-aware configuration value.
+ *
+ * Each parameter has a common value stored under its bare name (e.g. DIRECTPRINTWHB_PORT)
+ * and an optional per-terminal override stored under the suffixed name (e.g. DIRECTPRINTWHB_PORT2).
+ * A terminal that has no override (constant absent or empty) inherits the common value.
+ *
+ * @param 	string 	$name 		Bare constant name (the common value)
+ * @param 	int 	$terminal 	Terminal index (0 = no specific terminal, returns the common value)
+ * @return 	string 				The override value if defined, otherwise the common value
+ */
+function takeposconnectorGetConf($name, $terminal = 0)
+{
+	global $conf;
+
+	if ($terminal) {
+		$override = $name.$terminal;
+		if (isset($conf->global->$override) && $conf->global->$override !== '') {
+			return $conf->global->$override;
+		}
+	}
+
+	return isset($conf->global->$name) ? $conf->global->$name : '';
+}
+
+/**
+ * Build the edit-mode HTML for a per-terminal parameter that can either inherit the
+ * common value or define a specific one. Renders a "specific value" checkbox followed
+ * by the input widget, greyed out (disabled) as long as the terminal inherits the common value.
+ *
+ * Intended to be assigned to FormSetupItem::$fieldInputOverride.
+ *
+ * @param 	string 	$key 		Terminal constant name (e.g. DIRECTPRINTWHB_PORT2)
+ * @param 	string 	$commonKey 	Common constant name (e.g. DIRECTPRINTWHB_PORT)
+ * @param 	string 	$type 		Widget type: 'text', 'number' or 'select'
+ * @param 	array 	$options 	Optional 'choices' (array for select) and 'placeholder'
+ * @return 	string 				HTML for the value cell
+ */
+function takeposconnectorTerminalField($key, $commonKey, $type = 'text', $options = array())
+{
+	global $conf, $langs;
+
+	$hasOverride = isset($conf->global->$key) && $conf->global->$key !== '';
+	$commonVal = isset($conf->global->$commonKey) ? $conf->global->$commonKey : '';
+	$value = $hasOverride ? $conf->global->$key : $commonVal;
+	$disabled = $hasOverride ? '' : ' disabled';
+	$fieldId = 'setup-'.$key;
+
+	$out = '<label class="valignmiddle">';
+	$out .= '<input type="checkbox" class="takeposconn-override-cb" name="'.$key.'_override" value="1" data-target="'.$fieldId.'"'.($hasOverride ? ' checked' : '').'> ';
+	$out .= $langs->trans('TakeposconnSpecificValue').'</label> ';
+
+	$cssClass = 'flat minwidth200';
+	if ($type == 'select') {
+		$out .= '<select class="'.$cssClass.'" name="'.$key.'" id="'.$fieldId.'"'.$disabled.'>';
+		foreach ($options['choices'] as $optkey => $optlabel) {
+			$out .= '<option value="'.dol_escape_htmltag((string) $optkey).'"'.((string) $optkey === (string) $value ? ' selected' : '').'>'.dol_escape_htmltag($optlabel).'</option>';
+		}
+		$out .= '</select>';
+	} else {
+		$inputType = ($type == 'number') ? 'number' : 'text';
+		$placeholder = empty($options['placeholder']) ? '' : ' placeholder="'.dol_escape_htmltag($options['placeholder']).'"';
+		$out .= '<input type="'.$inputType.'" class="'.$cssClass.'" name="'.$key.'" id="'.$fieldId.'" value="'.dol_escape_htmltag((string) $value).'"'.$placeholder.$disabled.'>';
+	}
+
+	return $out;
+}
+
+/**
+ * Shared JavaScript that enables/disables the per-terminal input when its
+ * "specific value" checkbox is toggled. Print once, after the setup form.
+ *
+ * @return 	string 	The <script> block
+ */
+function takeposconnectorOverrideJs()
+{
+	return '<script>
+	jQuery(document).ready(function() {
+		jQuery(".takeposconn-override-cb").on("change", function() {
+			var field = jQuery("#" + jQuery(this).data("target"));
+			if (jQuery(this).is(":checked")) {
+				field.prop("disabled", false).focus();
+			} else {
+				field.prop("disabled", true);
+			}
+		});
+	});
+	</script>';
+}
+
+/**
+ * FormSetup save callback for a per-terminal override item. Stores the value as a
+ * specific override when the "specific value" checkbox is ticked (and not empty),
+ * otherwise deletes the constant so the terminal inherits the common value.
+ *
+ * @param 	FormSetupItem 	$item 	The setup item being saved
+ * @return 	int 					1 if OK, -1 if KO
+ */
+function takeposconnectorSaveOverrideItem($item)
+{
+	global $db, $conf;
+
+	$key = $item->confKey;
+	$override = GETPOST($key.'_override', 'int');
+	$value = GETPOST($key, 'alphanohtml');
+
+	if ($override && $value !== '') {
+		$res = dolibarr_set_const($db, $key, $value, 'chaine', 0, '', $conf->entity);
+	} else {
+		$res = dolibarr_del_const($db, $key, $conf->entity);
+	}
+
+	return ($res < 0) ? -1 : 1;
+}

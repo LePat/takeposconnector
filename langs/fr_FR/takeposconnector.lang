@@ -27,6 +27,8 @@ number = n°
 TotalTTCCourt = Tot.TTC
 UnitPriceShort = P.U
 
+TakeposconnCommonParameters = Paramètres communs (valeur par défaut de tous les terminaux)
+TakeposconnSpecificValue = Valeur spécifique
 WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance

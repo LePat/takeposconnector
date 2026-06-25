@@ -104,8 +104,10 @@ if (empty($refer) || preg_match('/compta\/facture\/card.php/', $refer)) {
 
 global $conf, $langs;
 
+dol_include_once('/takeposconnector/lib/takeposconnector.lib.php');
+
 $ws = 'ws://';
-if ($conf->global->{'DIRECTPRINTWHB_SECURE'.$terminaltouse}) {
+if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse)) {
 	$ws = 'wss://';
 }
 
@@ -172,7 +174,7 @@ function WebSocketSerial(options) {
 
 // Make it available
 const webSocketCustomerDisplay = new WebSocketSerial({
-	url: '<?php echo $conf->global->CUSTOMERDISPLAY_WEBSOCKET_URL; ?>'
+	url: '<?php echo takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $terminaltouse); ?>'
 });
 	
 // ===============================================
@@ -205,7 +207,7 @@ function WebSocketWeigh(options) {
         var chr = evt.data;
 		console.log("data: " + chr);
 
-		<?php if ($conf->global->WEIGHINGSCALE_PROTOCOL == "diag06") { ?>
+		<?php if (takeposconnectorGetConf('WEIGHINGSCALE_PROTOCOL', $terminaltouse) == "diag06") { ?>
 
 			var response = CheckoutDialog06.identifyMessage(evt.data);
 			if (response.type == 'ACK' && currentStateClient == ClientStates.SENDING_UNITPRICE_BEFORE_WEIGHING) {
@@ -291,14 +293,14 @@ function WebSocketWeigh(options) {
 var globalWeight = null;
 
 var webSocketWeight = new WebSocketWeigh({
-	url: '<?php echo $conf->global->WEIGHINGSCALE_WEBSOCKET_URL; ?>',
+	url: '<?php echo takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse); ?>',
     onUpdate: function (weight, stable) {
     	globalWeight = weight;
         console.log("onUpdate: " + weight + " is stable: " + stable);
     },
 });
 
-<?php if ($conf->global->WEIGHINGSCALE_PROTOCOL == "diag06") { ?>
+<?php if (takeposconnectorGetConf('WEIGHINGSCALE_PROTOCOL', $terminaltouse) == "diag06") { ?>
 
 /**
  * Etats de l'automate à états finis représentant l'utilisation du protocole diaglog-06 par le client.
@@ -428,22 +430,13 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 
 	var printService = new WebSocketPrinter({
 		url: "<?php echo $ws;
-		if ($conf->global->{'DIRECTPRINTWHB_IPADDRESS' . $terminaltouse}) {
-			echo $conf->global->{'DIRECTPRINTWHB_IPADDRESS' . $terminaltouse};
-		} else {
-			echo "127.0.0.1";
-		}
+		$ipaddress = takeposconnectorGetConf('DIRECTPRINTWHB_IPADDRESS', $terminaltouse);
+		echo $ipaddress ? $ipaddress : "127.0.0.1";
 		echo ":";
-		if ($conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse}) {
-			echo $conf->global->{'DIRECTPRINTWHB_PORT' . $terminaltouse};
-		} else {
-			echo "12212";
-		}
-		if ($conf->global->{'DIRECTPRINTWHB_PRINTER_SERVICE_NAME' . $terminaltouse}) {
-			echo $conf->global->{'DIRECTPRINTWHB_PRINTER_SERVICE_NAME' . $terminaltouse};
-		} else {
-			echo "/print/INVOICE";
-		} ?>",
+		$port = takeposconnectorGetConf('DIRECTPRINTWHB_PORT', $terminaltouse);
+		echo $port ? $port : "12212";
+		$servicename = takeposconnectorGetConf('DIRECTPRINTWHB_PRINTER_SERVICE_NAME', $terminaltouse);
+		echo $servicename ? $servicename : "/print/INVOICE"; ?>",
 
 		onConnect: function () {
 			$.jnotify("<?php echo $langs->trans('Connected');?>",
@@ -564,10 +557,10 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			data: {token: '<?php echo currentToken(); ?>'},
 			url: "<?php print dol_buildpath('/takeposconnector', 2) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
 			success: function (getdata) {
-				<?php  if ("TEST" == $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse}) { ?>
+				<?php  if ("TEST" == takeposconnectorGetConf('DIRECTPRINTWHB_TPPRINTERID', $terminaltouse)) { ?>
 				printService.submit(
 				{
-					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
+					"type": "<?php echo takeposconnectorGetConf('DIRECTPRINTWHB_TPPRINTERID', $terminaltouse);?>",
 					"raw_content": "\"" + getdata + "\""
 				});
 				<?php } else { ?>
@@ -593,7 +586,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			url: "<?php print dol_buildpath('/directprintwhb', 2) . '/ajax/ajax.php?action=opendrawer&term=' . urlencode($_SESSION["takeposterminal"]); ?>",
 			success: function (getdata) {
 				printService.submit({
-					"type": "<?php echo $conf->global->{'DIRECTPRINTWHB_TPPRINTERID' . $terminaltouse};?>",
+					"type": "<?php echo takeposconnectorGetConf('DIRECTPRINTWHB_TPPRINTERID', $terminaltouse);?>",
 					"raw_content": "\"" + getdata + "\""
 				});
 			}

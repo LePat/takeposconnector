@@ -644,8 +644,10 @@ class dolReceiptPrinter extends Printer
 		// print ticket
 		$level = 0;
 		$terminal = $_SESSION["takeposterminal"];
-		$nbcharactbyline = (!empty($conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal}) ? $conf->global->{'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$terminal} : 48);
-		$lineDescMaxLength = (!empty($conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal}) ? $conf->global->{'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$terminal} : 30);
+		
+		dol_include_once('/takeposconnector/lib/takeposconnector.lib.php');
+		$nbcharactbyline = (takeposconnectorGetConf('RECEIPT_PRINTER_NB_CHARACT_BY_LINE', $terminal) !== '' ? takeposconnectorGetConf('RECEIPT_PRINTER_NB_CHARACT_BY_LINE', $terminal) : 48);
+		$lineDescMaxLength = (takeposconnectorGetConf('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH', $terminal) !== '' ? takeposconnectorGetConf('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH', $terminal) : 30);
 		
 		$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $terminal);
 		$customer = new Societe($db);

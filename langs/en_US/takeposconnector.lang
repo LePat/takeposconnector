@@ -27,6 +27,12 @@ number = no
 TotalTTCCourt = Tot.TTC
 UnitPriceShort = U/P
 
+TakeposconnCommonParameters = Common parameters (default value for all terminals)
+TakeposconnSpecificValue = Specific value
+WEIGHINGSCALE_WEBSOCKET_URL = Weighing scale WebSocket URL
+CUSTOMERDISPLAY_WEBSOCKET_URL = Customer display WebSocket URL
+WEIGHINGSCALE_PROTOCOL = Scale communication protocol
+
 Terminal = Printer invoices
 DIRECTPRINTWHB_SECURE = Use SSL ?
 DIRECTPRINTWHB_IPADDRESS = IP Adress/Host name

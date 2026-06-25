@@ -89,29 +89,6 @@ if (!class_exists('FormSetup')) {
 }
 $formSetup = new FormSetup($db);
 
-// Setup conf for selection of an URL
-$item = $formSetup->newItem('WEIGHINGSCALE_WEBSOCKET_URL');
-$item->fieldParams['isMandatory'] = 1;
-$item->fieldAttr['placeholder'] = 'ws://localhost:12212/serial/WEIGH';
-$item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées';
-$item->cssClass = 'minwidth500';
-
-
-$TField = array(
-	'none' => $langs->trans('NONE'),
-	'diag06' => $langs->trans('Dialog-06'),
-);
-
-// Setup conf for a simple combo list
-$item = $formSetup->newItem('WEIGHINGSCALE_PROTOCOL')->setAsSelect($TField);
-
-// Setup conf for selection of an URL
-$item = $formSetup->newItem('CUSTOMERDISPLAY_WEBSOCKET_URL');
-$item->fieldParams['isMandatory'] = 1;
-$item->fieldAttr['placeholder'] = 'ws://localhost:12212/serial/DISPLAY';
-$item->helpText = 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client';
-$item->cssClass = 'minwidth500';
-
 // Select printer to use with terminal
 if(file_exists(DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php')) {
 	require_once DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php';
@@ -126,43 +103,77 @@ foreach ($printer->listprinterstemplates as $key => $value) {
 	$templates[$value['rowid']] = $value['name'];
 }
 
+$TField = array(
+	'none' => $langs->trans('NONE'),
+	'diag06' => $langs->trans('Dialog-06'),
+);
+$fieldOptions = array(
+	'oui' => $langs->trans('OUI'),
+	'non' => $langs->trans('NON'),
+);
+
+// Definition of every parameter that has a common value and can be overridden per terminal.
+// 'type' drives both the common widget and the per-terminal override widget.
+$paramDefs = array(
+	'WEIGHINGSCALE_WEBSOCKET_URL'          => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées'),
+	'WEIGHINGSCALE_PROTOCOL'               => array('type' => 'select', 'choices' => $TField),
+	'CUSTOMERDISPLAY_WEBSOCKET_URL'        => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client'),
+	'DIRECTPRINTWHB_SECURE'                => array('type' => 'select', 'choices' => $fieldOptions),
+	'DIRECTPRINTWHB_IPADDRESS'             => array('type' => 'text',   'placeholder' => 'localhost'),
+	'DIRECTPRINTWHB_PORT'                  => array('type' => 'number', 'placeholder' => '12212'),
+	'DIRECTPRINTWHB_PRINTER_SERVICE_NAME'  => array('type' => 'text',   'placeholder' => '/printer'),
+	'DIRECTPRINTWHB_TPPRINTERID'           => array('type' => 'text',   'placeholder' => 'INVOICE'),
+	'TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES' => array('type' => 'select', 'choices' => $templates),
+	'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH' => array('type' => 'number'),
+	'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'   => array('type' => 'number'),
+);
+
+// ----- Common parameters (default value used by every terminal unless overridden) -----
+$item = $formSetup->newItem('TakeposconnCommonParametersTitle')->setAsTitle();
+$item->nameText = $langs->trans('TakeposconnCommonParameters');
+
+foreach ($paramDefs as $base => $def) {
+	$item = $formSetup->newItem($base);
+	$item->nameText = $langs->trans($base);
+	if (!empty($def['css'])) {
+		$item->cssClass = $def['css'];
+	}
+	if (!empty($def['placeholder'])) {
+		$item->fieldAttr['placeholder'] = $def['placeholder'];
+	}
+	if (!empty($def['mandatory'])) {
+		$item->fieldParams['isMandatory'] = 1;
+	}
+	if (!empty($def['help'])) {
+		$item->helpText = $def['help'];
+	}
+	if ($def['type'] == 'select') {
+		$item->setAsSelect($def['choices']);
+	} elseif ($def['type'] == 'number') {
+		$item->setAsNumber();
+	}
+}
+
+// ----- Per-terminal parameters (inherit the common value or define a specific one) -----
 for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
 	$item = $formSetup->newItem('Terminal'.$indexTerminal)->setAsTitle();
 	$item->nameText = $langs->trans('Terminal').' '.$indexTerminal;
-	
-	$item = $formSetup->newItem('DIRECTPRINTWHB_SECURE'.$indexTerminal);
-	$item->nameText = $langs->trans('DIRECTPRINTWHB_SECURE');
-	$fieldOptions = array(
-		'oui' => $langs->trans('OUI'),
-		'non' => $langs->trans('NON'),
-	);
-	$item->setAsYesNo($fieldOptions);
-	
-	$item = $formSetup->newItem('DIRECTPRINTWHB_IPADDRESS'.$indexTerminal);
-	$item->nameText = $langs->trans('DIRECTPRINTWHB_IPADDRESS');
-	$item->fieldAttr['placeholder'] = 'localhost';
-	
-	$item = $formSetup->newItem('DIRECTPRINTWHB_PORT'.$indexTerminal);
-	$item->nameText = $langs->trans('DIRECTPRINTWHB_PORT');
-	$item->fieldAttr['placeholder'] = '12212';
-	
-	$item = $formSetup->newItem('DIRECTPRINTWHB_PRINTER_SERVICE_NAME'.$indexTerminal);
-	$item->nameText = $langs->trans('DIRECTPRINTWHB_PRINTER_SERVICE_NAME');
-	$item->fieldAttr['placeholder'] = '/printer';
-	
-	$item = $formSetup->newItem('DIRECTPRINTWHB_TPPRINTERID'.$indexTerminal);
-	$item->nameText = $langs->trans('DIRECTPRINTWHB_TPPRINTERID');
-	$item->fieldAttr['placeholder'] = 'INVOICE';
-	
-	$item = $formSetup->newItem('TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES'.$indexTerminal);
-	$item->nameText = $langs->trans('TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES');
-	$item->setAsSelect($templates);
-	
-	$item = $formSetup->newItem('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH'.$indexTerminal);
-	$item->nameText = $langs->trans('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH');
-	
-	$item = $formSetup->newItem('RECEIPT_PRINTER_NB_CHARACT_BY_LINE'.$indexTerminal);
-	$item->nameText = $langs->trans('RECEIPT_PRINTER_NB_CHARACT_BY_LINE');
+
+	foreach ($paramDefs as $base => $def) {
+		$key = $base.$indexTerminal;
+		$options = array();
+		if (!empty($def['choices'])) {
+			$options['choices'] = $def['choices'];
+		}
+		if (!empty($def['placeholder'])) {
+			$options['placeholder'] = $def['placeholder'];
+		}
+
+		$item = $formSetup->newItem($key);
+		$item->nameText = $langs->trans($base);
+		$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
+		$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
+	}
 }
 
 
@@ -311,6 +322,7 @@ echo '<h1><a target="_blank" href="https://github.com/imTigger/webapp-hardware-b
 if ($action == 'edit') {
 	if ($useFormSetup && (float) DOL_VERSION >= 15) {
 		print $formSetup->generateOutput(true);
+		print takeposconnectorOverrideJs();
 	} else {
 		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';

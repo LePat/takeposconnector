@@ -92,7 +92,8 @@ if ($action == "printinvoiceticket" && $term != '' && $id > 0 && !empty($user->r
 	$object = new Facture($db);
 	$object->fetch($id);
 	$conf->global->TAKEPOS_PRINT_METHOD = "takeposconnector"; //CATRIEL para obtener la salida de $printer
-	$ret = $printer->sendToPrinter($object, $conf->global->{'TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES'.$term}, $conf->global->{'TAKEPOS_PRINTER_TO_USE'.$term});
+	require_once '../lib/takeposconnector.lib.php';
+	$ret = $printer->sendToPrinter($object, takeposconnectorGetConf('TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES', $term), $conf->global->{'TAKEPOS_PRINTER_TO_USE'.$term});
 
 }
 
