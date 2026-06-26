@@ -115,9 +115,9 @@ function takeposconnectorTerminalField($key, $commonKey, $type = 'text', $option
 	$disabled = $hasOverride ? '' : ' disabled';
 	$fieldId = 'setup-'.$key;
 
-	$out = '<label class="valignmiddle">';
-	$out .= '<input type="checkbox" class="takeposconn-override-cb" name="'.$key.'_override" value="1" data-target="'.$fieldId.'"'.($hasOverride ? ' checked' : '').'> ';
-	$out .= $langs->trans('TakeposconnSpecificValue').'</label> ';
+	$overrideTitle = dol_escape_htmltag($langs->trans('TakeposconnSpecificValue'));
+	$out = '<input type="checkbox" class="takeposconn-override-cb valignmiddle" name="'.$key.'_override" value="1" data-target="'.$fieldId.'" title="'.$overrideTitle.'"'.($hasOverride ? ' checked' : '').'> ';
+	$out .= img_picto($langs->trans('TakeposconnSpecificValue'), 'help', '', false, 0, 0, '', 'paddingright').' ';
 
 	$cssClass = 'flat minwidth200';
 	if ($type == 'select') {

@@ -322,7 +322,7 @@ echo '<h1><a target="_blank" href="https://github.com/imTigger/webapp-hardware-b
 if ($action == 'edit') {
 	if ($useFormSetup && (float) DOL_VERSION >= 15) {
 		print '<div id="takeposconn-tabbed-setup">';
-		print $formSetup->generateOutput(true);
+		print $formSetup->generateOutput(true, true);
 		print '</div>';
 		print takeposconnectorOverrideJs();
 		print takeposconnectorTabsScript();
