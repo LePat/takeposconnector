@@ -321,8 +321,11 @@ echo '<h1><a target="_blank" href="https://github.com/imTigger/webapp-hardware-b
 
 if ($action == 'edit') {
 	if ($useFormSetup && (float) DOL_VERSION >= 15) {
+		print '<div id="takeposconn-tabbed-setup">';
 		print $formSetup->generateOutput(true);
+		print '</div>';
 		print takeposconnectorOverrideJs();
+		print takeposconnectorTabsScript();
 	} else {
 		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';

@@ -181,3 +181,53 @@ function takeposconnectorSaveOverrideItem($item)
 
 	return ($res < 0) ? -1 : 1;
 }
+
+/**
+ * Build the <style>/<script> block that turns the FormSetup section titles
+ * (rendered by generateOutput() as <tr class="liste_titre"> rows: the "common
+ * parameters" section then one section per terminal) into in-page tabs.
+ *
+ * The setup stays a single form with a single Save button: switching tabs only
+ * shows/hides rows client-side, nothing is submitted on tab change, and hidden
+ * inputs are still posted on Save. Must be printed right after the FormSetup
+ * output, which must be wrapped in a <div id="takeposconn-tabbed-setup">.
+ *
+ * @return 	string 	The <style> + <script> block
+ */
+function takeposconnectorTabsScript()
+{
+	return <<<'HTML'
+<style>
+#takeposconn-tabbed-setup .takeposconn-tabs { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:3px; }
+#takeposconn-tabbed-setup .takeposconn-tabs li { padding:6px 14px; cursor:pointer; border:1px solid var(--colortopbordertitle1, #ccc); border-bottom:none; border-radius:5px 5px 0 0; background:var(--colorbacktitle1, #f4f4f4); white-space:nowrap; }
+#takeposconn-tabbed-setup .takeposconn-tabs li.active { background:var(--colorbackbody, #fff); font-weight:bold; }
+#takeposconn-tabbed-setup table.noborder { margin-top:0; }
+</style>
+<script>
+jQuery(document).ready(function() {
+	var $root = jQuery("#takeposconn-tabbed-setup");
+	var $table = $root.find("table").first();
+	var $titles = $table.find("tbody > tr.liste_titre");
+	if ($titles.length < 2) { return; }
+
+	var $nav = jQuery('<ul class="takeposconn-tabs"></ul>');
+	$titles.each(function(i) {
+		var $title = jQuery(this);
+		$title.addClass("takeposconn-sec-title").attr("data-sec", i).hide();
+		$title.nextUntil("tr.liste_titre").attr("data-sec", i);
+		var label = jQuery.trim($title.find("td").first().text());
+		$nav.append(jQuery('<li></li>').attr("data-sec", i).text(label));
+	});
+	$root.find(".div-table-responsive-no-min").first().before($nav);
+
+	function showSection(sec) {
+		$nav.find("li").removeClass("active").filter('[data-sec="' + sec + '"]').addClass("active");
+		$table.find("tbody > tr").hide();
+		$table.find('tbody > tr[data-sec="' + sec + '"]').not(".takeposconn-sec-title").show();
+	}
+	$nav.on("click", "li", function() { showSection(jQuery(this).data("sec")); });
+	showSection(0);
+});
+</script>
+HTML;
+}
