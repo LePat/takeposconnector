@@ -51,7 +51,3 @@ button.actionbuttondisabled {
 .tpc-dot-ouvert    { background-color: #2ecc40; } /* vert : connecté */
 .tpc-dot-ferme     { background-color: #ff4136; } /* rouge : déconnecté (reconnexion auto) */
 .tpc-dot-connexion { background-color: #ffdc00; } /* jaune : connexion en cours */
-@keyframes tpc-pulse {
-	0%, 100% { opacity: 1; }
-	50%      { opacity: .3; }
-}
