@@ -203,6 +203,9 @@ function takeposconnectorTabsScript()
 #takeposconn-tabbed-setup .takeposconn-tabs li.active { background:var(--colorbackbody, #fff); font-weight:bold; }
 #takeposconn-tabbed-setup table.noborder { margin-top:0; }
 #takeposconn-tabbed-setup .col-setup-title { width:400px; max-width:400px; }
+#takeposconn-tabbed-setup input[type="text"],
+#takeposconn-tabbed-setup input[type="number"],
+#takeposconn-tabbed-setup select { width:400px; min-width:0; max-width:100%; box-sizing:border-box; }
 </style>
 <script>
 jQuery(document).ready(function() {
