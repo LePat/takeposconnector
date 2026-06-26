@@ -158,6 +158,10 @@ foreach ($paramDefs as $base => $def) {
 for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
 	$item = $formSetup->newItem('Terminal'.$indexTerminal)->setAsTitle();
 	$item->nameText = $langs->trans('Terminal').' '.$indexTerminal;
+	$terminalName = getDolGlobalString('TAKEPOS_TERMINAL_NAME_'.$indexTerminal);
+	if ($terminalName !== '') {
+		$item->nameText .= ': '.$terminalName;
+	}
 
 	foreach ($paramDefs as $base => $def) {
 		$key = $base.$indexTerminal;
