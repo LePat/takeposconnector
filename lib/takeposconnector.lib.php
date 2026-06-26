@@ -202,6 +202,7 @@ function takeposconnectorTabsScript()
 #takeposconn-tabbed-setup .takeposconn-tabs li { padding:6px 14px; cursor:pointer; border:1px solid var(--colortopbordertitle1, #ccc); border-bottom:none; border-radius:5px 5px 0 0; background:var(--colorbacktitle1, #f4f4f4); white-space:nowrap; }
 #takeposconn-tabbed-setup .takeposconn-tabs li.active { background:var(--colorbackbody, #fff); font-weight:bold; }
 #takeposconn-tabbed-setup table.noborder { margin-top:0; }
+#takeposconn-tabbed-setup .col-setup-title { width:400px; max-width:400px; }
 </style>
 <script>
 jQuery(document).ready(function() {
