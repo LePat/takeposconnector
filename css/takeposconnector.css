@@ -18,3 +18,40 @@ button.actionbuttondisabled {
 	margin: 1px;
 	border-width: 0;
 }
+
+/* ---- Indicateurs d'état des connexions matériel (topnav) ---- */
+.tpc-hwstatus {
+	margin-left: 8px;
+	white-space: nowrap;
+}
+.tpc-hw {
+	position: relative;
+	display: inline-block;
+	margin: 0 7px;
+	cursor: pointer;
+	vertical-align: middle;
+	font-size: 1.05em;
+	line-height: 1;
+}
+.tpc-hw .fa {
+	color: white;
+	opacity: .85;
+}
+.tpc-dot {
+	position: absolute;
+	right: -5px;
+	bottom: -3px;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 0, 0, .3);
+	box-sizing: border-box;
+	background-color: #ff4136; /* défaut : déconnecté */
+}
+.tpc-dot-ouvert    { background-color: #2ecc40; } /* vert : connecté */
+.tpc-dot-ferme     { background-color: #ff4136; } /* rouge : déconnecté (reconnexion auto) */
+.tpc-dot-connexion { background-color: #ffdc00; } /* jaune : connexion en cours */
+@keyframes tpc-pulse {
+	0%, 100% { opacity: 1; }
+	50%      { opacity: .3; }
+}

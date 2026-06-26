@@ -104,6 +104,8 @@ if (empty($refer) || preg_match('/compta\/facture\/card.php/', $refer)) {
 
 global $conf, $langs;
 
+$langs->load('takeposconnector@takeposconnector');
+
 dol_include_once('/takeposconnector/lib/takeposconnector.lib.php');
 
 $ws = 'ws://';
@@ -111,7 +113,110 @@ if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse) == 'oui') {
 	$ws = 'wss://';
 }
 
+// Appareils configurés pour ce terminal — détermine les indicateurs d'état affichés dans le topnav.
+$tpcScaleUrl   = takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse);
+$tpcDisplayUrl = takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $terminaltouse);
+$tpcHasScale   = !empty($tpcScaleUrl);
+$tpcHasDisplay = !empty($tpcDisplayUrl);
+$tpcHasDrawer  = (getDolGlobalInt('TAKEPOS_ADD_BUTTON_OPEN_DRAWER'.$terminaltouse) > 0);
+
 ?>
+
+// ===============================================
+// Indicateurs d'état & reconnexion robuste (TPC)
+// Aligné sur la console de simulation du webapp-hardware-bridge :
+// reconnexion temporisée, anti-empilement, et état exposé à l'UI.
+// ===============================================
+
+// Délai avant tentative de reconnexion automatique (ms).
+var TPC_DELAI_RECONNEXION = 1000;
+
+// Dernier état connu par appareil ('connexion' | 'ouvert' | 'ferme'), pour
+// pouvoir réafficher les pastilles dès qu'elles sont injectées dans le DOM
+// (les sockets se connectent avant l'injection des icônes).
+var tpcEtats = {};
+
+// Timers de reconnexion en attente, indexés par clé d'appareil, pour ne jamais
+// lancer deux chaînes de reconnexion en parallèle sur un même socket.
+var tpcTimersReconnexion = {};
+
+// Références des wrappers WebSocket, pour la reconnexion forcée au clic.
+var tpcAppareils = {};
+
+// Libellés lisibles des appareils.
+var tpcLibelles = {
+	scale:   <?php echo json_encode($langs->transnoentitiesnoconv('TPCDeviceScale')); ?>,
+	display: <?php echo json_encode($langs->transnoentitiesnoconv('TPCDeviceDisplay')); ?>,
+	printer: <?php echo json_encode($langs->transnoentitiesnoconv('TPCDevicePrinter')); ?>,
+	drawer:  <?php echo json_encode($langs->transnoentitiesnoconv('TPCDeviceDrawer')); ?>
+};
+
+function tpcTexteEtat(etat) {
+	return {
+		'connexion': <?php echo json_encode($langs->transnoentitiesnoconv('TPCStateConnecting')); ?>,
+		'ouvert':    <?php echo json_encode($langs->transnoentitiesnoconv('TPCStateConnected')); ?>,
+		'ferme':     <?php echo json_encode($langs->transnoentitiesnoconv('TPCStateDisconnected')); ?>
+	}[etat] || etat;
+}
+
+// Applique l'état (couleur + infobulle) à la pastille d'un appareil, si présente.
+function tpcAppliquerEtat(cle, etat) {
+	var dot = document.getElementById('tpc-dot-' + cle);
+	if (!dot) {
+		return;
+	}
+	dot.className = 'tpc-dot tpc-dot-' + etat;
+	if (dot.parentNode) {
+		dot.parentNode.title = (tpcLibelles[cle] || cle) + ' — ' + tpcTexteEtat(etat);
+	}
+}
+
+// Met à jour l'état d'un appareil. Le tiroir-caisse n'a pas de socket propre :
+// il passe par l'imprimante, donc son état recopie celui de 'printer'.
+function tpcMajEtat(cle, etat) {
+	tpcEtats[cle] = etat;
+	tpcAppliquerEtat(cle, etat);
+	if (cle === 'printer') {
+		tpcEtats['drawer'] = etat;
+		tpcAppliquerEtat('drawer', etat);
+	}
+}
+
+// Reprogramme une reconnexion après coupure, sans empiler les chaînes parallèles
+// (corrige la double reconnexion onerror+onclose de l'ancienne balance).
+function tpcReconnecterAvecDelai(cle, connectFn) {
+	if (tpcTimersReconnexion[cle]) {
+		return;
+	}
+	tpcTimersReconnexion[cle] = setTimeout(function () {
+		tpcTimersReconnexion[cle] = null;
+		connectFn();
+	}, TPC_DELAI_RECONNEXION);
+}
+
+// Ferme un socket sans déclencher la reconnexion auto (neutralise les handlers).
+function tpcFermerProprement(ws) {
+	if (ws !== undefined && ws !== null) {
+		ws.onclose = null;
+		ws.onerror = null;
+		try { ws.close(); } catch (e) {}
+	}
+}
+
+// Reconnexion immédiate déclenchée par l'utilisateur (clic sur la pastille).
+function tpcForcerReconnexion(cle) {
+	if (cle === 'drawer') {
+		cle = 'printer';
+	}
+	if (tpcTimersReconnexion[cle]) {
+		clearTimeout(tpcTimersReconnexion[cle]);
+		tpcTimersReconnexion[cle] = null;
+	}
+	var appareil = tpcAppareils[cle];
+	if (appareil && typeof appareil.reconnecterMaintenant === 'function') {
+		appareil.reconnecterMaintenant();
+	}
+}
 
 // ===============================================
 // WebSocketSerial (defaults to CustomerDisplay)
@@ -120,6 +225,7 @@ if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse) == 'oui') {
 function WebSocketSerial(options) {
     var defaults = {
         url: 'ws://localhost:12212/serial/DISPLAY',
+        cle: 'display',
         onConnect: function () {
         },
         onDisconnect: function () {
@@ -137,36 +243,52 @@ function WebSocketSerial(options) {
         settings.onMessage(chr);
     };
 
+    var userOnOpen = null;
+
     var onConnect = function () {
+        tpcMajEtat(settings.cle, 'ouvert');
         settings.onConnect();
+        if (typeof userOnOpen === 'function') {
+            userOnOpen();
+        }
     };
 
     var onDisconnect = function () {
+        tpcMajEtat(settings.cle, 'ferme');
         settings.onDisconnect();
-        reconnect();
+        tpcReconnecterAvecDelai(settings.cle, connect);
     };
 
     var connect = function () {
+        tpcMajEtat(settings.cle, 'connexion');
         websocket = new WebSocket(settings.url);
         websocket.onopen = onConnect;
         websocket.onclose = onDisconnect;
         websocket.onmessage = onMessage;
+        websocket.onerror = function (evt) { console.log('WebSocket error (' + settings.cle + '): ', evt); };
     };
 
-    var reconnect = function () {
-        connect();
-    };
-	
 	this.readyState = function () {
-		return websocket.readyState;
+		return websocket ? websocket.readyState : WebSocket.CLOSED;
 	};
-	
+
+	// Enregistre un callback persistant rejoué à chaque (re)connexion, y compris
+	// après une reconnexion automatique (l'ancien onOpen écrasait websocket.onopen
+	// du socket courant et était perdu au reconnect).
 	this.onOpen = function(callback) {
-		websocket.onopen = callback;
+		userOnOpen = callback;
+		if (websocket && websocket.readyState === WebSocket.OPEN) {
+			callback();
+		}
 	};
 
     this.send = function (message) {
         websocket.send(message);
+    };
+
+    this.reconnecterMaintenant = function () {
+        tpcFermerProprement(websocket);
+        connect();
     };
 
     connect();
@@ -174,8 +296,10 @@ function WebSocketSerial(options) {
 
 // Make it available
 const webSocketCustomerDisplay = new WebSocketSerial({
+	cle: 'display',
 	url: '<?php echo takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $terminaltouse); ?>'
 });
+tpcAppareils['display'] = webSocketCustomerDisplay;
 	
 // ===============================================
 // WebSocketWeigh (default protocol)
@@ -184,6 +308,7 @@ const webSocketCustomerDisplay = new WebSocketSerial({
 function WebSocketWeigh(options) {
     var defaults = {
         url: 'ws://localhost:12212/serial/WEIGH',
+        cle: 'scale',
         weightRegex: new RegExp('([0-9]{1,2}\\.[0-9]{3})kg'),
         stableRegex: new RegExp('^ST.*\\s+'),
         onConnect: function () {
@@ -199,8 +324,10 @@ function WebSocketWeigh(options) {
     var buffer = '';
     
     var onError = function(evt) {
-    	console.log("Error: " + evt);
-    	reconnect();
+    	// Ne PAS reconnecter ici : un onerror est toujours suivi d'un onclose qui
+    	// se charge de la reconnexion. Reconnecter aux deux endroits empilait les
+    	// sockets (croissance exponentielle d'instances orphelines) à chaque coupure.
+    	console.log("Error (scale): ", evt);
     }
 
     var onMessage = function (evt) {
@@ -265,15 +392,18 @@ function WebSocketWeigh(options) {
     };
 
     var onConnect = function () {
+        tpcMajEtat(settings.cle, 'ouvert');
         settings.onConnect();
     };
 
     var onDisconnect = function () {
+        tpcMajEtat(settings.cle, 'ferme');
         settings.onDisconnect();
-        reconnect();
+        tpcReconnecterAvecDelai(settings.cle, connect);
     };
 
     var connect = function () {
+        tpcMajEtat(settings.cle, 'connexion');
         websocket = new WebSocket(settings.url);
         websocket.onopen = onConnect;
         websocket.onclose = onDisconnect;
@@ -281,24 +411,37 @@ function WebSocketWeigh(options) {
         websocket.onerror = onError;
     };
 
-    var reconnect = function () {
+    // On expose le wrapper (et non le socket natif) pour que la référence
+    // `webSocketWeight` reste valable après une reconnexion : auparavant elle
+    // pointait sur le socket mort après la première coupure et la pesée ne
+    // repartait plus (readyState restait CLOSED).
+    this.readyState = function () {
+        return websocket ? websocket.readyState : WebSocket.CLOSED;
+    };
+
+    this.send = function (message) {
+        websocket.send(message);
+    };
+
+    this.reconnecterMaintenant = function () {
+        tpcFermerProprement(websocket);
         connect();
     };
 
     connect();
-    
-    return websocket;
 }
 
 var globalWeight = null;
 
 var webSocketWeight = new WebSocketWeigh({
+	cle: 'scale',
 	url: '<?php echo takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse); ?>',
     onUpdate: function (weight, stable) {
     	globalWeight = weight;
         console.log("onUpdate: " + weight + " is stable: " + stable);
     },
 });
+tpcAppareils['scale'] = webSocketWeight;
 
 <?php if (takeposconnectorGetConf('WEIGHINGSCALE_PROTOCOL', $terminaltouse) == "diag06") { ?>
 
@@ -326,7 +469,7 @@ function askForWeight(unitPrice, callback, errorCallback) {
 }
 
 function startWeighingSequence(unitPrice) {
-	if (webSocketWeight !== undefined && webSocketWeight.readyState === WebSocket.OPEN) {
+	if (webSocketWeight !== undefined && webSocketWeight.readyState() === WebSocket.OPEN) {
 		sendUnitPrice(unitPrice);
 	} else {
 		currentErrorCallback("Cannot send unitPrice to scale");
@@ -361,6 +504,7 @@ function ENQ() {
 
 function WebSocketPrinter(options) {
 	var defaults = {
+		cle: 'printer',
 		onConnect: function () {
 		},
 		onDisconnect: function () {
@@ -379,23 +523,28 @@ function WebSocketPrinter(options) {
 
 	var onConnect = function () {
 		connected = true;
+		tpcMajEtat(settings.cle, 'ouvert');
 		settings.onConnect();
 	};
 
 	var onDisconnect = function () {
 		connected = false;
+		tpcMajEtat(settings.cle, 'ferme');
 		settings.onDisconnect();
-		reconnect();
+		tpcReconnecterAvecDelai(settings.cle, connect);
 	};
 
 	var connect = function () {
+		tpcMajEtat(settings.cle, 'connexion');
 		websocket = new WebSocket(settings.url);
 		websocket.onopen = onConnect;
 		websocket.onclose = onDisconnect;
 		websocket.onmessage = onMessage;
+		websocket.onerror = function (evt) { console.log('WebSocket error (' + settings.cle + '): ', evt); };
 	};
 
-	var reconnect = function () {
+	this.reconnecterMaintenant = function () {
+		tpcFermerProprement(websocket);
 		connect();
 	};
 
@@ -429,6 +578,7 @@ var url = window.location.pathname;
 if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php')) {
 
 	var printService = new WebSocketPrinter({
+		cle: 'printer',
 		url: "<?php echo $ws;
 		$ipaddress = takeposconnectorGetConf('DIRECTPRINTWHB_IPADDRESS', $terminaltouse);
 		echo $ipaddress ? $ipaddress : "127.0.0.1";
@@ -469,13 +619,61 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			//console.log(message);
 		},
 	});
+	tpcAppareils['printer'] = printService;
 
 
 	//TAKEPOS Action button
 	if (url.includes('/takepos/index.php')) {
-	
+
 		idproduct = "";
-		
+
+		// --- Indicateurs d'état des connexions matériel dans le topnav ---
+		$(document).ready(function () {
+			var $hote = $('#topnav-left');
+			if (!$hote.length) {
+				return;
+			}
+
+			function tpcIcone(cle, classeFa) {
+				return '<span class="tpc-hw" data-cle="' + cle + '" title="' + (tpcLibelles[cle] || cle) + '">' +
+					'<span class="' + classeFa + '"></span>' +
+					'<span class="tpc-dot tpc-dot-ferme" id="tpc-dot-' + cle + '"></span>' +
+					'</span>';
+			}
+
+			// On n'affiche que les appareils réellement configurés sur ce terminal.
+			var html = '<div class="inline-block valignmiddle tpc-hwstatus">';
+			<?php if ($tpcHasScale) { ?>
+			html += tpcIcone('scale', 'fa fa-balance-scale');
+			<?php } ?>
+			<?php if ($tpcHasDisplay) { ?>
+			html += tpcIcone('display', 'fa fa-desktop');
+			<?php } ?>
+			html += tpcIcone('printer', 'fa fa-print');
+			<?php if ($tpcHasDrawer) { ?>
+			html += tpcIcone('drawer', 'fa fa-cash-register');
+			<?php } ?>
+			html += '</div>';
+
+			// Inséré juste après le bloc entrepôt s'il existe, sinon en fin de topnav-left.
+			var $apres = $('#infowarehouse');
+			if ($apres.length) {
+				$apres.after(html);
+			} else {
+				$hote.append(html);
+			}
+
+			// Réapplique les états déjà connus (les sockets se connectent avant l'injection).
+			for (var cle in tpcEtats) {
+				tpcAppliquerEtat(cle, tpcEtats[cle]);
+			}
+
+			// Clic sur une pastille = reconnexion immédiate de l'appareil.
+			$('.tpc-hwstatus .tpc-hw').on('click', function () {
+				tpcForcerReconnexion($(this).data('cle'));
+			});
+		});
+
 		$(document).ready(function() {
 			// Selectionne le noeud dont les mutations seront observées
 			var targetNode = document.getElementById("poslines");

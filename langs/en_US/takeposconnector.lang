@@ -43,3 +43,12 @@ TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES = Template to use for invoices
 TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH = Product name max length
 RECEIPT_PRINTER_NB_CHARACT_BY_LINE = Number of characters per line
 
+# Hardware connection status indicators (topnav)
+TPCDeviceScale = Scale
+TPCDeviceDisplay = Customer display
+TPCDevicePrinter = Receipt printer
+TPCDeviceDrawer = Cash drawer
+TPCStateConnecting = Connecting…
+TPCStateConnected = Connected
+TPCStateDisconnected = Disconnected (auto-reconnect)
+
