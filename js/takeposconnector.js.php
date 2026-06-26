@@ -107,7 +107,7 @@ global $conf, $langs;
 dol_include_once('/takeposconnector/lib/takeposconnector.lib.php');
 
 $ws = 'ws://';
-if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse)) {
+if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse) == 'oui') {
 	$ws = 'wss://';
 }
 
