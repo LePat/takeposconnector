@@ -589,21 +589,10 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 		echo $servicename ? $servicename : "/print/INVOICE"; ?>",
 
 		onConnect: function () {
-			$.jnotify("<?php echo $langs->trans('Connected');?>",
-				"info",
-				{ timeout: 5 },
-				{
-					remove: function () { }
-				});
+			// L'état est désormais visible via la pastille du topnav (tpcMajEtat).
 			console.log('Connected');
 		},
 		onDisconnect: function () {
-			$.jnotify("<?php echo $langs->trans('Disconnected');?>",
-				"error",
-				{ timeout: 5 },
-				{
-					remove: function () {}
-				});
 			console.log('Disconnected');
 		},
 		onUpdate: function (message) {
