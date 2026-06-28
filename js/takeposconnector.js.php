@@ -128,8 +128,12 @@ $tpcHasDrawer  = (getDolGlobalInt('TAKEPOS_ADD_BUTTON_OPEN_DRAWER'.$terminaltous
 // reconnexion temporisée, anti-empilement, et état exposé à l'UI.
 // ===============================================
 
-// Délai avant tentative de reconnexion automatique (ms).
+// Délai de base avant tentative de reconnexion automatique (ms). Le délai réel croît
+// exponentiellement à chaque échec consécutif (back-off) jusqu'à un plafond, pour qu'un
+// appareil durablement absent ne sature pas la file d'admission WebSocket de Firefox
+// (un seul handshake en cours par hôte) et ne bloque pas la (re)connexion des autres.
 var TPC_DELAI_RECONNEXION = 1000;
+var TPC_DELAI_RECONNEXION_MAX = 30000;
 
 // Dernier état connu par appareil ('connexion' | 'ouvert' | 'ferme'), pour
 // pouvoir réafficher les pastilles dès qu'elles sont injectées dans le DOM
@@ -139,6 +143,10 @@ var tpcEtats = {};
 // Timers de reconnexion en attente, indexés par clé d'appareil, pour ne jamais
 // lancer deux chaînes de reconnexion en parallèle sur un même socket.
 var tpcTimersReconnexion = {};
+
+// Nombre d'échecs consécutifs par appareil, pour calculer le back-off. Remis à zéro
+// dès qu'une connexion aboutit (voir tpcMajEtat) ou sur reconnexion manuelle.
+var tpcTentatives = {};
 
 // Références des wrappers WebSocket, pour la reconnexion forcée au clic.
 var tpcAppareils = {};
@@ -175,6 +183,9 @@ function tpcAppliquerEtat(cle, etat) {
 // il passe par l'imprimante, donc son état recopie celui de 'printer'.
 function tpcMajEtat(cle, etat) {
 	tpcEtats[cle] = etat;
+	if (etat === 'ouvert') {
+		tpcTentatives[cle] = 0;
+	}
 	tpcAppliquerEtat(cle, etat);
 	if (cle === 'printer') {
 		tpcEtats['drawer'] = etat;
@@ -188,10 +199,14 @@ function tpcReconnecterAvecDelai(cle, connectFn) {
 	if (tpcTimersReconnexion[cle]) {
 		return;
 	}
+	var n = tpcTentatives[cle] || 0;
+	tpcTentatives[cle] = n + 1;
+	var delai = Math.min(TPC_DELAI_RECONNEXION * Math.pow(2, n), TPC_DELAI_RECONNEXION_MAX);
+	console.log('[TPC] reconnexion ' + cle + ' #' + (n + 1) + ' programmée dans ' + delai + ' ms');
 	tpcTimersReconnexion[cle] = setTimeout(function () {
 		tpcTimersReconnexion[cle] = null;
 		connectFn();
-	}, TPC_DELAI_RECONNEXION);
+	}, delai);
 }
 
 // Ferme un socket sans déclencher la reconnexion auto (neutralise les handlers).
@@ -212,11 +227,38 @@ function tpcForcerReconnexion(cle) {
 		clearTimeout(tpcTimersReconnexion[cle]);
 		tpcTimersReconnexion[cle] = null;
 	}
+	// Clic utilisateur = on repart d'un back-off neuf (reconnexion immédiate).
+	tpcTentatives[cle] = 0;
 	var appareil = tpcAppareils[cle];
 	if (appareil && typeof appareil.reconnecterMaintenant === 'function') {
 		appareil.reconnecterMaintenant();
 	}
 }
+
+// Ferme proprement tous les sockets matériel avant que la page ne soit déchargée
+// (rechargement TakePOS, changement de terminal, fermeture d'onglet). Sans ça, le
+// WHB ne détecte les connexions mortes qu'au timeout de ping (~5 s, voir Server.java),
+// laissant des abonnés fantômes le temps que la nouvelle page se reconnecte.
+function tpcFermerTousLesAppareils() {
+	// Annule toute reconnexion programmée pour ne pas relancer un socket pendant l'unload.
+	for (var cle in tpcTimersReconnexion) {
+		if (tpcTimersReconnexion[cle]) {
+			clearTimeout(tpcTimersReconnexion[cle]);
+			tpcTimersReconnexion[cle] = null;
+		}
+	}
+	for (var cle2 in tpcAppareils) {
+		var appareil = tpcAppareils[cle2];
+		if (appareil && typeof appareil.fermer === 'function') {
+			appareil.fermer();
+		}
+	}
+}
+
+// 'pagehide' couvre rechargement, navigation et fermeture d'onglet (plus fiable que
+// 'beforeunload'). Un socket ouvert rend de toute façon la page inéligible au bfcache,
+// donc aucun risque de fermer les sockets d'une page qui serait restaurée.
+window.addEventListener('pagehide', tpcFermerTousLesAppareils);
 
 // ===============================================
 // WebSocketSerial (defaults to CustomerDisplay)
@@ -291,15 +333,25 @@ function WebSocketSerial(options) {
         connect();
     };
 
+    // Ferme le socket sans relance auto (déchargement de page).
+    this.fermer = function () {
+        tpcFermerProprement(websocket);
+    };
+
     connect();
 }
 
-// Make it available
+// Make it available — uniquement si un afficheur est configuré pour ce terminal.
+// Instancier une socket vers une URL vide/absente faisait échouer son handshake en
+// boucle et, via la sérialisation d'admission WebSocket de Firefox (un seul handshake
+// en cours par hôte), bloquait ~60 s la (re)connexion des autres appareils au rechargement.
+<?php if ($tpcHasDisplay) { ?>
 const webSocketCustomerDisplay = new WebSocketSerial({
 	cle: 'display',
 	url: '<?php echo takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $terminaltouse); ?>'
 });
 tpcAppareils['display'] = webSocketCustomerDisplay;
+<?php } ?>
 	
 // ===============================================
 // WebSocketWeigh (default protocol)
@@ -428,12 +480,22 @@ function WebSocketWeigh(options) {
         connect();
     };
 
+    // Ferme le socket sans relance auto (déchargement de page).
+    this.fermer = function () {
+        tpcFermerProprement(websocket);
+    };
+
     connect();
 }
 
 var globalWeight = null;
 
-var webSocketWeight = new WebSocketWeigh({
+// Déclarée même sans balance configurée : le code diag06 plus bas la teste via
+// `webSocketWeight !== undefined`. On ne l'instancie que si une balance est configurée
+// pour ce terminal, pour ne pas polluer la file d'admission WebSocket de Firefox.
+var webSocketWeight;
+<?php if ($tpcHasScale) { ?>
+webSocketWeight = new WebSocketWeigh({
 	cle: 'scale',
 	url: '<?php echo takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse); ?>',
     onUpdate: function (weight, stable) {
@@ -442,6 +504,7 @@ var webSocketWeight = new WebSocketWeigh({
     },
 });
 tpcAppareils['scale'] = webSocketWeight;
+<?php } ?>
 
 <?php if (takeposconnectorGetConf('WEIGHINGSCALE_PROTOCOL', $terminaltouse) == "diag06") { ?>
 
@@ -546,6 +609,11 @@ function WebSocketPrinter(options) {
 	this.reconnecterMaintenant = function () {
 		tpcFermerProprement(websocket);
 		connect();
+	};
+
+	// Ferme le socket sans relance auto (déchargement de page).
+	this.fermer = function () {
+		tpcFermerProprement(websocket);
 	};
 
 	this.submit = function (data) {
