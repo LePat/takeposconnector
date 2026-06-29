@@ -295,9 +295,15 @@ function WebSocketSerial(options) {
         }
     };
 
-    var onDisconnect = function () {
+    var onDisconnect = function (evt) {
         tpcMajEtat(settings.cle, 'ferme');
         settings.onDisconnect();
+        // Fermeture propre par le WHB car le périphérique est absent (code 4001) : on sonde
+        // à cadence de base sans escalade du back-off, pour repasser au vert ~1 s après le
+        // rebranchage. Les fermetures anormales (WHB injoignable) gardent le back-off.
+        if (evt && evt.code === 4001) {
+            tpcTentatives[settings.cle] = 0;
+        }
         tpcReconnecterAvecDelai(settings.cle, connect);
     };
 
@@ -448,9 +454,15 @@ function WebSocketWeigh(options) {
         settings.onConnect();
     };
 
-    var onDisconnect = function () {
+    var onDisconnect = function (evt) {
         tpcMajEtat(settings.cle, 'ferme');
         settings.onDisconnect();
+        // Fermeture propre par le WHB car le périphérique est absent (code 4001) : on sonde
+        // à cadence de base sans escalade du back-off, pour repasser au vert ~1 s après le
+        // rebranchage. Les fermetures anormales (WHB injoignable) gardent le back-off.
+        if (evt && evt.code === 4001) {
+            tpcTentatives[settings.cle] = 0;
+        }
         tpcReconnecterAvecDelai(settings.cle, connect);
     };
 
@@ -590,10 +602,15 @@ function WebSocketPrinter(options) {
 		settings.onConnect();
 	};
 
-	var onDisconnect = function () {
+	var onDisconnect = function (evt) {
 		connected = false;
 		tpcMajEtat(settings.cle, 'ferme');
 		settings.onDisconnect();
+		// Cf. WebSocketSerial : fermeture 4001 (périphérique absent) -> sondage à cadence
+		// de base sans escalade (utile si l'imprimante passe par un canal série).
+		if (evt && evt.code === 4001) {
+			tpcTentatives[settings.cle] = 0;
+		}
 		tpcReconnecterAvecDelai(settings.cle, connect);
 	};
 
