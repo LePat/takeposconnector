@@ -768,7 +768,8 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 					// Substitution des fonctions Javascript pour les boutons d'action
 					var buttons = document.querySelectorAll(".actionbutton, .actionbuttondisabled");
 					for (var button of buttons) {
-						if (button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting") ||
+						if (button["attributes"]["onclick"].value.includes("Print") ||
+							button["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting") ||
 							button["attributes"]["onclick"].value.includes("TakeposConnector") ||
 							button["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
 							button["attributes"]["onclick"].value.includes("TakeposPrinting") ||
@@ -799,6 +800,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 					// Substitution pour le bouton d'impression après paiement
 					var buttonPrint = document.getElementById("buttonprint");
 					if (buttonPrint != null && (
+							buttonPrint["attributes"]["onclick"].value.includes("Print") ||
 							buttonPrint["attributes"]["onclick"].value.includes("DolibarrTakeposPrinting") ||
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposConnector") ||
 							buttonPrint["attributes"]["onclick"].value.includes("TakeposPrintingOrder") ||
