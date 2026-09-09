@@ -297,9 +297,6 @@ print load_fiche_titre($langs->trans($page_name), $linkback, 'title_setup');
 $head = takeposconnectorAdminPrepareHead();
 print dol_get_fiche_head($head, 'scope'.$scope, $langs->trans($page_name), -1, "takeposconnector@takeposconnector");
 
-// Setup page goes here
-echo '<span class="opacitymedium">'.$langs->trans("TakePOS Connector").'</span><br><br>';
-
 $htmltext = $langs->trans('TakeposconnRequiresWHB').' ';
 $htmltext .= '<a target="_blank" href="https://github.com/LePat/webapp-hardware-bridge/releases">'.$langs->trans('TakeposconnDownloadWHB').'</a>';
 print info_admin($htmltext, 0, 0, 'warning');
@@ -329,7 +326,6 @@ if ($action == 'edit') {
 		}
 		print '</table>';
 		print '</div>';
-		print '<br>';
 
 		$firstSection = true;
 		foreach ($paramSections as $sectionLabelKey => $fields) {
