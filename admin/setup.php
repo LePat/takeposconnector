@@ -113,12 +113,14 @@ $fieldOptions = array(
 );
 
 // Definition of every parameter that has a common value and can be overridden per terminal.
-// 'type' drives both the common widget and the per-terminal override widget.
+// 'type' drives both the common widget and the per-terminal override widget. Order matters:
+// it's the display order below (SSL first since it applies to every WHB connection, then one
+// group per device).
 $paramDefs = array(
+	'DIRECTPRINTWHB_SECURE'                => array('type' => 'select', 'choices' => $fieldOptions),
 	'WEIGHINGSCALE_WEBSOCKET_URL'          => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées'),
 	'WEIGHINGSCALE_PROTOCOL'               => array('type' => 'select', 'choices' => $TField),
 	'CUSTOMERDISPLAY_WEBSOCKET_URL'        => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client'),
-	'DIRECTPRINTWHB_SECURE'                => array('type' => 'select', 'choices' => $fieldOptions),
 	'DIRECTPRINTWHB_IPADDRESS'             => array('type' => 'text',   'placeholder' => 'localhost'),
 	'DIRECTPRINTWHB_PORT'                  => array('type' => 'number', 'placeholder' => '12212'),
 	'DIRECTPRINTWHB_PRINTER_SERVICE_NAME'  => array('type' => 'text',   'placeholder' => '/printer'),
@@ -128,11 +130,23 @@ $paramDefs = array(
 	'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'   => array('type' => 'number'),
 );
 
+// Field that opens a new logical group, and the lang key of its section header. Applied
+// identically to the common parameters and to every per-terminal tab.
+$sectionStarts = array(
+	'WEIGHINGSCALE_WEBSOCKET_URL' => 'TakeposconnSectionScale',
+	'CUSTOMERDISPLAY_WEBSOCKET_URL' => 'TakeposconnSectionDisplay',
+	'DIRECTPRINTWHB_IPADDRESS' => 'TakeposconnSectionPrinter',
+);
+
 // ----- Common parameters (default value used by every terminal unless overridden) -----
 $item = $formSetup->newItem('TakeposconnCommonParametersTitle')->setAsTitle();
 $item->nameText = $langs->trans('TakeposconnCommonParameters');
 
 foreach ($paramDefs as $base => $def) {
+	if (isset($sectionStarts[$base])) {
+		takeposconnectorSetupSectionHeader($formSetup, $langs, 'Section_'.$base, $sectionStarts[$base]);
+	}
+
 	$item = $formSetup->newItem($base);
 	$item->nameText = $langs->trans($base);
 	if (!empty($def['css'])) {
@@ -164,6 +178,10 @@ for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINAL
 	}
 
 	foreach ($paramDefs as $base => $def) {
+		if (isset($sectionStarts[$base])) {
+			takeposconnectorSetupSectionHeader($formSetup, $langs, 'Section_'.$base.$indexTerminal, $sectionStarts[$base]);
+		}
+
 		$key = $base.$indexTerminal;
 		$options = array();
 		if (!empty($def['choices'])) {
@@ -317,7 +335,9 @@ print dol_get_fiche_head($head, 'settings', $langs->trans($page_name), -1, "take
 // Setup page goes here
 echo '<span class="opacitymedium">'.$langs->trans("TakePOS Connector").'</span><br><br>';
 
-echo '<h1><a target="_blank" href="https://github.com/imTigger/webapp-hardware-bridge/releases">Download TakePOS connector client APP</a></h1>';
+$htmltext = $langs->trans('TakeposconnRequiresWHB').' ';
+$htmltext .= '<a target="_blank" href="https://github.com/imTigger/webapp-hardware-bridge/releases">'.$langs->trans('TakeposconnDownloadWHB').'</a>';
+print info_admin($htmltext, 0, 0, 'warning');
 
 
 if ($action == 'edit') {

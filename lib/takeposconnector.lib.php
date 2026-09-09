@@ -183,6 +183,25 @@ function takeposconnectorSaveOverrideItem($item)
 }
 
 /**
+ * Insert a non-tabbable subsection header row into a FormSetup (styled via CSS, not a real
+ * FormSetup title: a title() row would be picked up by takeposconnectorTabsScript() as a new
+ * top-level tab, which would break the Common/Terminal-N tab structure).
+ *
+ * @param 	FormSetup 	$formSetup 	The setup form
+ * @param 	Translate 	$langs 		Translations
+ * @param 	string 		$key 		Unique confKey for this header
+ * @param 	string 		$labelKey 	Lang key of the section label
+ * @return 	void
+ */
+function takeposconnectorSetupSectionHeader($formSetup, $langs, $key, $labelKey)
+{
+	$item = $formSetup->newItem($key);
+	$item->nameText = $langs->trans($labelKey);
+	$item->fieldOverride = '&nbsp;';
+	$item->fieldParams['trClass'] = 'takeposconn-subsection';
+}
+
+/**
  * Build the <style>/<script> block that turns the FormSetup section titles
  * (rendered by generateOutput() as <tr class="liste_titre"> rows: the "common
  * parameters" section then one section per terminal) into in-page tabs.
@@ -206,6 +225,7 @@ function takeposconnectorTabsScript()
 #takeposconn-tabbed-setup input[type="text"],
 #takeposconn-tabbed-setup input[type="number"],
 #takeposconn-tabbed-setup select { width:400px; min-width:0; max-width:100%; box-sizing:border-box; }
+#takeposconn-tabbed-setup tr.takeposconn-subsection td { font-weight:bold; padding-top:12px; border-top:1px solid var(--colortopbordertitle1, #ccc); }
 </style>
 <script>
 jQuery(document).ready(function() {

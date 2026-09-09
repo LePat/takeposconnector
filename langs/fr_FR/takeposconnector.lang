@@ -29,6 +29,11 @@ UnitPriceShort = P.U
 
 TakeposconnCommonParameters = Paramètres communs (valeur par défaut de tous les terminaux)
 TakeposconnSpecificValue = Valeur spécifique
+TakeposconnRequiresWHB = TakePOS Connector a besoin que le service Webapp-Hardware-Bridge (WHB) soit installé et lancé pour dialoguer avec la balance, l'imprimante, l'afficheur client et le tiroir-caisse.
+TakeposconnDownloadWHB = Télécharger le service d'accès au matériel Webapp-Hardware-Bridge
+TakeposconnSectionScale = Pesée
+TakeposconnSectionDisplay = Afficheur client
+TakeposconnSectionPrinter = Impression des tickets
 WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance
