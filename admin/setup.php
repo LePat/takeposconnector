@@ -336,7 +336,7 @@ print dol_get_fiche_head($head, 'settings', $langs->trans($page_name), -1, "take
 echo '<span class="opacitymedium">'.$langs->trans("TakePOS Connector").'</span><br><br>';
 
 $htmltext = $langs->trans('TakeposconnRequiresWHB').' ';
-$htmltext .= '<a target="_blank" href="https://github.com/imTigger/webapp-hardware-bridge/releases">'.$langs->trans('TakeposconnDownloadWHB').'</a>';
+$htmltext .= '<a target="_blank" href="https://github.com/LePat/webapp-hardware-bridge/releases">'.$langs->trans('TakeposconnDownloadWHB').'</a>';
 print info_admin($htmltext, 0, 0, 'warning');
 
 

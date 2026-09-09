@@ -50,7 +50,7 @@ It should work with the global setup as the takeposconnector module uses the New
 
 It opens WebSockets on port 12212.
 
-Install the Webapp-Hardware-Bridge (WHB) from: https://github.com/imTigger/webapp-hardware-bridge
+Install the Webapp-Hardware-Bridge (WHB) from: https://github.com/LePat/webapp-hardware-bridge
 
 Configure the takeposconnector to make TakePOS use the WHB:
 - Weighing Scale webservice: ws://127.0.0.1:12212/serial/WEIGH (or ws://127.0.0.1:12212/takepos for tests)
