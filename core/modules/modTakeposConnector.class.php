@@ -154,11 +154,18 @@ class modTakeposConnector extends DolibarrModules
 		//$this->always_enabled = true;								// If true, can't be disabled
 
 		// Constants
-		// List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
-		// Example: $this->const=array(1 => array('TAKEPOSCONNECTOR_MYNEWCONST1', 'chaine', 'myvalue', 'This is a constant to add', 1),
-		//                             2 => array('TAKEPOSCONNECTOR_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
-		// );
-		$this->const = array();
+		// Default values for the printer connection to the Webapp-Hardware-Bridge (WHB) and the
+		// scale protocol, set once at activation so a fresh install isn't left with blank fields
+		// (see js/takeposconnector.js.php which already assumed 127.0.0.1/12212/print/INVOICE as
+		// fallback when these were empty). Not set for WEIGHINGSCALE_WEBSOCKET_URL /
+		// CUSTOMERDISPLAY_WEBSOCKET_URL on purpose: their emptiness is the deliberate signal used
+		// by the topnav hardware indicators to mean "no such device configured".
+		$this->const = array(
+			1 => array('DIRECTPRINTWHB_IPADDRESS', 'chaine', '127.0.0.1', 'Default WHB host for the printer connection', 0),
+			2 => array('DIRECTPRINTWHB_PORT', 'chaine', '12212', 'Default WHB port', 0),
+			3 => array('DIRECTPRINTWHB_PRINTER_SERVICE_NAME', 'chaine', '/print/INVOICE', 'Default WHB printer service path', 0),
+			4 => array('WEIGHINGSCALE_PROTOCOL', 'chaine', 'none', 'Default weighing scale protocol', 0),
+		);
 
 		// Some keys to add into the overwriting translation tables
 		/*$this->overwrite_translation = array(
