@@ -955,6 +955,43 @@ class dolReceiptPrinter extends Printer
 	}
 
 	/**
+	 *  Pulse the cash drawer (ESC/POS "kick" command), without a full receipt template.
+	 *  Mirrors the DOL_OPEN_DRAWER case of sendToPrinter()'s template parsing. When
+	 *  TAKEPOS_PRINT_METHOD is 'takeposconnector', nothing is physically printed here: the raw
+	 *  ESC/POS bytes are echoed (URL-safe base64) for the browser to submit over the WHB
+	 *  WebSocket, exactly like sendToPrinter() does at the end.
+	 *
+	 *  @param   int       $printerid       Printer id (unused in 'takeposconnector' mode)
+	 *  @return  int                        0 if OK; >0 if KO
+	 */
+	public function openDrawer($printerid)
+	{
+		global $conf;
+		$error = 0;
+
+		$ret = $this->initPrinter($printerid);
+		if ($ret > 0) {
+			setEventMessages($this->error, $this->errors, 'errors');
+			return 1;
+		}
+
+		$this->printer->pulse();
+
+		// If is DummyPrintConnector send to log to debugging
+		if ($this->printer->connector instanceof DummyPrintConnector || $conf->global->TAKEPOS_PRINT_METHOD == "takeposconnector") {
+			$data = $this->printer->connector->getData();
+			if ($conf->global->TAKEPOS_PRINT_METHOD == "takeposconnector") {
+				echo rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+			}
+			dol_syslog($data);
+		}
+		// Close and print
+		$this->printer->close();
+
+		return $error;
+	}
+
+	/**
 	 *  Function to load Template
 	 *
 	 *  @param   int       $templateid          Template id

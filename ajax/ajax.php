@@ -97,6 +97,16 @@ if ($action == "printinvoiceticket" && $term != '' && $id > 0 && !empty($user->r
 
 }
 
+// Pulse the cash drawer (client-side WHB submission of the raw ESC/POS bytes, see
+// dolReceiptPrinter::openDrawer()). Mirrors core's own takepos/ajax/ajax.php?action=opendrawer,
+// which instead prints server-side and can't reach hardware that's only wired to the browser.
+if ($action == "opendrawer" && $term != '') {
+	require_once '../dolreceiptprinter.class.php';
+	$printer = new dolReceiptPrinter($db);
+	$conf->global->TAKEPOS_PRINT_METHOD = "takeposconnector";
+	$printer->openDrawer($conf->global->{'TAKEPOS_PRINTER_TO_USE'.$term});
+}
+
 $invoiceid = GETPOST('invoiceid', 'int');
 $place = (GETPOST('place', 'aZ09') ? GETPOST('place', 'aZ09') : 0); // $place is id of table for Bar or Restaurant
 $placeid = 0; // $placeid is ID of invoice

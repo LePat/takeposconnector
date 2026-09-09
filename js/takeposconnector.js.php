@@ -865,12 +865,17 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 		$.ajax({
 			type: "GET",
 			data: {token: '<?php echo currentToken(); ?>'},
-			url: "<?php print dol_buildpath('/directprintwhb', 2) . '/ajax/ajax.php?action=opendrawer&term=' . urlencode($_SESSION["takeposterminal"]); ?>",
+			url: "<?php print dol_buildpath('/takeposconnector', 1) . '/ajax/ajax.php?action=opendrawer&term=' . urlencode($_SESSION["takeposterminal"]); ?>",
 			success: function (getdata) {
-				printService.submit({
+				<?php if ("TEST" == takeposconnectorGetConf('DIRECTPRINTWHB_TPPRINTERID', $terminaltouse)) { ?>
+				printService.submit(
+				{
 					"type": "<?php echo takeposconnectorGetConf('DIRECTPRINTWHB_TPPRINTERID', $terminaltouse);?>",
 					"raw_content": "\"" + getdata + "\""
 				});
+				<?php } else { ?>
+				printService.submitRaw(getdata);
+				<?php } ?>
 			}
 		});
 	}
