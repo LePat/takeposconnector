@@ -112,89 +112,75 @@ $fieldOptions = array(
 	'non' => $langs->trans('NON'),
 );
 
-// Definition of every parameter that has a common value and can be overridden per terminal.
-// 'type' drives both the common widget and the per-terminal override widget. Order matters:
-// it's the display order below (SSL first since it applies to every WHB connection, then one
-// group per device).
-$paramDefs = array(
-	'DIRECTPRINTWHB_SECURE'                => array('type' => 'select', 'choices' => $fieldOptions),
-	'WEIGHINGSCALE_WEBSOCKET_URL'          => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées'),
-	'WEIGHINGSCALE_PROTOCOL'               => array('type' => 'select', 'choices' => $TField),
-	'CUSTOMERDISPLAY_WEBSOCKET_URL'        => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client'),
-	'DIRECTPRINTWHB_IPADDRESS'             => array('type' => 'text',   'placeholder' => 'localhost'),
-	'DIRECTPRINTWHB_PORT'                  => array('type' => 'number', 'placeholder' => '12212'),
-	'DIRECTPRINTWHB_PRINTER_SERVICE_NAME'  => array('type' => 'text',   'placeholder' => '/printer'),
-	'DIRECTPRINTWHB_TPPRINTERID'           => array('type' => 'text',   'placeholder' => 'INVOICE'),
-	'TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES' => array('type' => 'select', 'choices' => $templates),
-	'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH' => array('type' => 'number'),
-	'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'   => array('type' => 'number'),
-);
-
-// Field that opens a new logical group, and the lang key of its section header. Applied
-// identically to the common parameters and to every per-terminal tab.
-$sectionStarts = array(
-	'WEIGHINGSCALE_WEBSOCKET_URL' => 'TakeposconnSectionScale',
-	'CUSTOMERDISPLAY_WEBSOCKET_URL' => 'TakeposconnSectionDisplay',
-	'DIRECTPRINTWHB_IPADDRESS' => 'TakeposconnSectionPrinter',
+// Definition of every parameter that has a common value and can be overridden per terminal,
+// grouped by device (rendered as one titled table per group, propal-admin-page style). 'type'
+// drives both the common widget and the per-terminal override widget. DIRECTPRINTWHB_SECURE
+// lives under the printer group: it's only used to build the printer's WHB WebSocket URL
+// (js/takeposconnector.js.php:667) — the scale/display URLs already carry their own ws:// or
+// wss:// scheme, so it has no effect on them.
+$paramSections = array(
+	'TakeposconnSectionScale' => array(
+		'WEIGHINGSCALE_WEBSOCKET_URL' => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées'),
+		'WEIGHINGSCALE_PROTOCOL'      => array('type' => 'select', 'choices' => $TField),
+	),
+	'TakeposconnSectionDisplay' => array(
+		'CUSTOMERDISPLAY_WEBSOCKET_URL' => array('type' => 'text', 'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client'),
+	),
+	'TakeposconnSectionPrinter' => array(
+		'DIRECTPRINTWHB_SECURE'                => array('type' => 'select', 'choices' => $fieldOptions),
+		'DIRECTPRINTWHB_IPADDRESS'             => array('type' => 'text',   'placeholder' => 'localhost'),
+		'DIRECTPRINTWHB_PORT'                  => array('type' => 'number', 'placeholder' => '12212'),
+		'DIRECTPRINTWHB_PRINTER_SERVICE_NAME'  => array('type' => 'text',   'placeholder' => '/printer'),
+		'DIRECTPRINTWHB_TPPRINTERID'           => array('type' => 'text',   'placeholder' => 'INVOICE'),
+		'TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES' => array('type' => 'select', 'choices' => $templates),
+		'TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH' => array('type' => 'number'),
+		'RECEIPT_PRINTER_NB_CHARACT_BY_LINE'   => array('type' => 'number'),
+	),
 );
 
 // ----- Common parameters (default value used by every terminal unless overridden) -----
-$item = $formSetup->newItem('TakeposconnCommonParametersTitle')->setAsTitle();
-$item->nameText = $langs->trans('TakeposconnCommonParameters');
-
-foreach ($paramDefs as $base => $def) {
-	if (isset($sectionStarts[$base])) {
-		takeposconnectorSetupSectionHeader($formSetup, $langs, 'Section_'.$base, $sectionStarts[$base]);
-	}
-
-	$item = $formSetup->newItem($base);
-	$item->nameText = $langs->trans($base);
-	if (!empty($def['css'])) {
-		$item->cssClass = $def['css'];
-	}
-	if (!empty($def['placeholder'])) {
-		$item->fieldAttr['placeholder'] = $def['placeholder'];
-	}
-	if (!empty($def['mandatory'])) {
-		$item->fieldParams['isMandatory'] = 1;
-	}
-	if (!empty($def['help'])) {
-		$item->helpText = $def['help'];
-	}
-	if ($def['type'] == 'select') {
-		$item->setAsSelect($def['choices']);
-	} elseif ($def['type'] == 'number') {
-		$item->setAsNumber();
+foreach ($paramSections as $fields) {
+	foreach ($fields as $base => $def) {
+		$item = $formSetup->newItem($base);
+		$item->nameText = $langs->trans($base);
+		if (!empty($def['css'])) {
+			$item->cssClass = $def['css'];
+		}
+		if (!empty($def['placeholder'])) {
+			$item->fieldAttr['placeholder'] = $def['placeholder'];
+		}
+		if (!empty($def['mandatory'])) {
+			$item->fieldParams['isMandatory'] = 1;
+		}
+		if (!empty($def['help'])) {
+			$item->helpText = $def['help'];
+		}
+		if ($def['type'] == 'select') {
+			$item->setAsSelect($def['choices']);
+		} elseif ($def['type'] == 'number') {
+			$item->setAsNumber();
+		}
 	}
 }
 
 // ----- Per-terminal parameters (inherit the common value or define a specific one) -----
 for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
-	$item = $formSetup->newItem('Terminal'.$indexTerminal)->setAsTitle();
-	$item->nameText = $langs->trans('Terminal').' '.$indexTerminal;
-	$terminalName = getDolGlobalString('TAKEPOS_TERMINAL_NAME_'.$indexTerminal);
-	if ($terminalName !== '') {
-		$item->nameText .= ': '.$terminalName;
-	}
+	foreach ($paramSections as $fields) {
+		foreach ($fields as $base => $def) {
+			$key = $base.$indexTerminal;
+			$options = array();
+			if (!empty($def['choices'])) {
+				$options['choices'] = $def['choices'];
+			}
+			if (!empty($def['placeholder'])) {
+				$options['placeholder'] = $def['placeholder'];
+			}
 
-	foreach ($paramDefs as $base => $def) {
-		if (isset($sectionStarts[$base])) {
-			takeposconnectorSetupSectionHeader($formSetup, $langs, 'Section_'.$base.$indexTerminal, $sectionStarts[$base]);
+			$item = $formSetup->newItem($key);
+			$item->nameText = $langs->trans($base);
+			$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
+			$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
 		}
-
-		$key = $base.$indexTerminal;
-		$options = array();
-		if (!empty($def['choices'])) {
-			$options['choices'] = $def['choices'];
-		}
-		if (!empty($def['placeholder'])) {
-			$options['placeholder'] = $def['placeholder'];
-		}
-
-		$item = $formSetup->newItem($key);
-		$item->nameText = $langs->trans($base);
-		$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
-		$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
 	}
 }
 
@@ -342,9 +328,62 @@ print info_admin($htmltext, 0, 0, 'warning');
 
 if ($action == 'edit') {
 	if ($useFormSetup && (float) DOL_VERSION >= 15) {
+		// One tab per scope (common parameters, then one per terminal), each containing one
+		// titled table per device section (propal admin page style: load_fiche_titre() + table).
+		$scopes = array();
+		$scopes[0] = array('label' => $langs->trans('TakeposconnCommonParameters'), 'suffix' => '');
+		for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
+			$terminalLabel = $langs->trans('Terminal').' '.$indexTerminal;
+			$terminalName = getDolGlobalString('TAKEPOS_TERMINAL_NAME_'.$indexTerminal);
+			if ($terminalName !== '') {
+				$terminalLabel .= ': '.$terminalName;
+			}
+			$scopes[$indexTerminal] = array('label' => $terminalLabel, 'suffix' => (string) $indexTerminal);
+		}
+
+		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'" autocomplete="off">';
+		print '<input type="hidden" name="token" value="'.newToken().'">';
+		print '<input type="hidden" name="action" value="update">';
+
 		print '<div id="takeposconn-tabbed-setup">';
-		print $formSetup->generateOutput(true, true);
+
+		print '<ul class="takeposconn-tabs">';
+		foreach ($scopes as $sec => $scope) {
+			print '<li data-sec="'.$sec.'">'.dol_escape_htmltag($scope['label']).'</li>';
+		}
+		print '</ul>';
+
+		foreach ($scopes as $sec => $scope) {
+			print '<div class="takeposconn-scope" data-sec="'.$sec.'">';
+			$firstSection = true;
+			foreach ($paramSections as $sectionLabelKey => $fields) {
+				if (!$firstSection) {
+					print '<br>';
+				}
+				$firstSection = false;
+				print load_fiche_titre($langs->trans($sectionLabelKey), '', '');
+				print '<div class="div-table-responsive-no-min">';
+				print '<table class="noborder centpercent">';
+				foreach ($fields as $base => $def) {
+					$key = $base.$scope['suffix'];
+					if (isset($formSetup->items[$key])) {
+						print $formSetup->generateLineOutput($formSetup->items[$key], true);
+					}
+				}
+				print '</table>';
+				print '</div>';
+			}
+			print '</div>';
+		}
+
+		print '</div>'; // #takeposconn-tabbed-setup
+
+		print '<div class="form-setup-button-container center">';
+		print '<input class="button button-save reposition" type="submit" value="'.$langs->trans("Save").'" name="save">';
 		print '</div>';
+
+		print '</form>';
+
 		print takeposconnectorOverrideJs();
 		print takeposconnectorTabsScript();
 	} else {

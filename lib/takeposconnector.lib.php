@@ -183,33 +183,15 @@ function takeposconnectorSaveOverrideItem($item)
 }
 
 /**
- * Insert a non-tabbable subsection header row into a FormSetup (styled via CSS, not a real
- * FormSetup title: a title() row would be picked up by takeposconnectorTabsScript() as a new
- * top-level tab, which would break the Common/Terminal-N tab structure).
+ * Build the <style>/<script> block for the per-terminal tabs: one <div class="takeposconn-scope">
+ * per terminal (plus one for the common parameters), each holding its own titled tables (one per
+ * device section, propal-admin-page style: load_fiche_titre() + <table>). Tabs and scopes are
+ * built server-side (see admin/setup.php); this only wires the click-to-show/hide behaviour.
  *
- * @param 	FormSetup 	$formSetup 	The setup form
- * @param 	Translate 	$langs 		Translations
- * @param 	string 		$key 		Unique confKey for this header
- * @param 	string 		$labelKey 	Lang key of the section label
- * @return 	void
- */
-function takeposconnectorSetupSectionHeader($formSetup, $langs, $key, $labelKey)
-{
-	$item = $formSetup->newItem($key);
-	$item->nameText = $langs->trans($labelKey);
-	$item->fieldOverride = '&nbsp;';
-	$item->fieldParams['trClass'] = 'takeposconn-subsection';
-}
-
-/**
- * Build the <style>/<script> block that turns the FormSetup section titles
- * (rendered by generateOutput() as <tr class="liste_titre"> rows: the "common
- * parameters" section then one section per terminal) into in-page tabs.
- *
- * The setup stays a single form with a single Save button: switching tabs only
- * shows/hides rows client-side, nothing is submitted on tab change, and hidden
- * inputs are still posted on Save. Must be printed right after the FormSetup
- * output, which must be wrapped in a <div id="takeposconn-tabbed-setup">.
+ * The setup stays a single form with a single Save button: switching tabs only shows/hides a
+ * scope's <div> client-side, nothing is submitted on tab change, hidden terminals' inputs are
+ * still posted on Save. Must be printed right after the tabs/scopes markup, itself wrapped in a
+ * <div id="takeposconn-tabbed-setup">.
  *
  * @return 	string 	The <style> + <script> block
  */
@@ -225,32 +207,24 @@ function takeposconnectorTabsScript()
 #takeposconn-tabbed-setup input[type="text"],
 #takeposconn-tabbed-setup input[type="number"],
 #takeposconn-tabbed-setup select { width:400px; min-width:0; max-width:100%; box-sizing:border-box; }
-#takeposconn-tabbed-setup tr.takeposconn-subsection td { font-weight:bold; padding-top:12px; border-top:1px solid var(--colortopbordertitle1, #ccc); }
 </style>
 <script>
 jQuery(document).ready(function() {
 	var $root = jQuery("#takeposconn-tabbed-setup");
-	var $table = $root.find("table").first();
-	var $titles = $table.find("tbody > tr.liste_titre");
-	if ($titles.length < 2) { return; }
-
-	var $nav = jQuery('<ul class="takeposconn-tabs"></ul>');
-	$titles.each(function(i) {
-		var $title = jQuery(this);
-		$title.addClass("takeposconn-sec-title").attr("data-sec", i).hide();
-		$title.nextUntil("tr.liste_titre").attr("data-sec", i);
-		var label = jQuery.trim($title.find("td").first().text());
-		$nav.append(jQuery('<li></li>').attr("data-sec", i).text(label));
-	});
-	$root.find(".div-table-responsive-no-min").first().before($nav);
+	var $nav = $root.find(".takeposconn-tabs");
+	var $scopes = $root.find(".takeposconn-scope");
+	if ($scopes.length < 2) {
+		$nav.hide();
+		$scopes.show();
+		return;
+	}
 
 	function showSection(sec) {
 		$nav.find("li").removeClass("active").filter('[data-sec="' + sec + '"]').addClass("active");
-		$table.find("tbody > tr").hide();
-		$table.find('tbody > tr[data-sec="' + sec + '"]').not(".takeposconn-sec-title").show();
+		$scopes.hide().filter('[data-sec="' + sec + '"]').show();
 	}
 	$nav.on("click", "li", function() { showSection(jQuery(this).data("sec")); });
-	showSection(0);
+	showSection($nav.find("li").first().data("sec"));
 });
 </script>
 HTML;

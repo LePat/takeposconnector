@@ -27,7 +27,7 @@ number = no
 TotalTTCCourt = Tot.TTC
 UnitPriceShort = U/P
 
-TakeposconnCommonParameters = Common parameters (default value for all terminals)
+TakeposconnCommonParameters = Common parameters
 TakeposconnSpecificValue = Specific value
 TakeposconnRequiresWHB = TakePOS Connector needs the Webapp-Hardware-Bridge (WHB) service installed and running to talk to your scale, printer, customer display and cash drawer.
 TakeposconnDownloadWHB = Download the Webapp-Hardware-Bridge (WHB) hardware access service

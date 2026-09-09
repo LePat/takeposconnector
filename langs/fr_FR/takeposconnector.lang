@@ -27,7 +27,7 @@ number = n°
 TotalTTCCourt = Tot.TTC
 UnitPriceShort = P.U
 
-TakeposconnCommonParameters = Paramètres communs (valeur par défaut de tous les terminaux)
+TakeposconnCommonParameters = Paramètres communs
 TakeposconnSpecificValue = Valeur spécifique
 TakeposconnRequiresWHB = TakePOS Connector a besoin que le service Webapp-Hardware-Bridge (WHB) soit installé et lancé pour dialoguer avec la balance, l'imprimante, l'afficheur client et le tiroir-caisse.
 TakeposconnDownloadWHB = Télécharger le service d'accès au matériel Webapp-Hardware-Bridge
