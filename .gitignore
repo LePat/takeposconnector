@@ -20,3 +20,7 @@
 *.back
 /.editorconfig
 /.gitattributes
+# Local AI dev notes (Claude Code), not part of the public module
+/CLAUDE.md
+/TODO.md
+/.claude/
