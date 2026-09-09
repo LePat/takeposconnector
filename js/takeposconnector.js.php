@@ -659,6 +659,13 @@ function WebSocketPrinter(options) {
 	connect();
 }
 
+// Guards against this file's device-connection/topnav-injection logic running more than once
+// on the same page (e.g. if addHtmlHeader ever emits the <script> tag twice): without it, a
+// second run opens a second WebSocket to the printer (leaked, never closed) and duplicates the
+// topnav hardware icons.
+if (!window.tpcTakeposconnectorLoaded) {
+window.tpcTakeposconnectorLoaded = true;
+
 var url = window.location.pathname;
 if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php')) {
 
@@ -820,10 +827,11 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 			// Commence à observer le noeud cible pour les mutations précédemment configurées
 			observer.observe(targetNode, config);
 		});
-	
+
 	}
-	
-	
+} // window.tpcTakeposconnectorLoaded guard
+
+
 	function DirectPrintWHBDolibarrTakeposPrinting(id) {
 		console.log("DolibarrTakeposPrinting Printing invoice ticket " + id)
 		$.ajax({
