@@ -837,7 +837,7 @@ if (url.includes('/takepos/index.php') || url.includes('/compta/facture/card.php
 		$.ajax({
 			type: "GET",
 			data: {token: '<?php echo currentToken(); ?>'},
-			url: "<?php print dol_buildpath('/takeposconnector', 2) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
+			url: "<?php print dol_buildpath('/takeposconnector', 1) . '/ajax/ajax.php?action=printinvoiceticket&term=' . urlencode($_SESSION["takeposterminal"]) . '&id='; ?>" + id,
 			success: function (getdata) {
 				<?php  if ("TEST" == takeposconnectorGetConf('DIRECTPRINTWHB_TPPRINTERID', $terminaltouse)) { ?>
 				printService.submit(
