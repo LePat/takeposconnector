@@ -288,6 +288,10 @@ $page_name = "TakeposConnectorSetup";
 
 llxHeader('', $langs->trans($page_name), $help_url);
 
+// Flush the "SetupSaved"/error message queued by saveConfFromPost() above — missing until now,
+// so a save never showed any visible confirmation.
+dol_htmloutput_events();
+
 // Subheader
 $linkback = '<a href="'.($backtopage ? $backtopage : DOL_URL_ROOT.'/admin/modules.php?restore_lastsearch_values=1').'">'.$langs->trans("BackToModuleList").'</a>';
 

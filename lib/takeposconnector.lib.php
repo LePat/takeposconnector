@@ -151,7 +151,13 @@ function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix
 
 		$item = $formSetup->newItem($key);
 		$item->nameText = $langs->trans($base);
-		$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
+		// fieldInputCallBack (not fieldInputOverride): this item is built before the Actions
+		// section runs (and saves the POSTed value into $conf->global), but the widget itself
+		// must reflect that just-saved value on this same page's render. fieldInputOverride
+		// would bake in the pre-save value, requiring a second save to show correctly.
+		$item->fieldInputCallBack = function () use ($key, $base, $def, $options) {
+			return takeposconnectorTerminalField($key, $base, $def['type'], $options);
+		};
 		$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
 	}
 }
