@@ -37,6 +37,8 @@ TakeposconnSectionPrinter = Receipt printing
 WEIGHINGSCALE_WEBSOCKET_URL = Weighing scale WebSocket URL
 CUSTOMERDISPLAY_WEBSOCKET_URL = Customer display WebSocket URL
 WEIGHINGSCALE_PROTOCOL = Scale communication protocol
+TakeposconnHelpScaleUrl = WebSocket URL configured on the Webapp-Hardware-Bridge to perform weighings
+TakeposconnHelpDisplayUrl = WebSocket URL configured on the Webapp-Hardware-Bridge for the customer display
 
 Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Use SSL ?

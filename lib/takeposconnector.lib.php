@@ -101,6 +101,62 @@ function takeposconnectorGetConf($name, $terminal = 0)
 }
 
 /**
+ * Build (and add to $formSetup) the item for one parameter of the current scope: a plain
+ * common-value field on the "Commun" tab (scope 0), or a terminal override widget (inherit
+ * or specific value) on a "Terminal N" tab. Used by admin/setup.php for both the standalone
+ * SSL field and every field of every device section.
+ *
+ * @param 	FormSetup 	$formSetup 		The setup form
+ * @param 	Translate 	$langs 			Translations
+ * @param 	int 		$scope 			Current scope (0 = common, N = terminal N)
+ * @param 	string 		$scopeSuffix 	'' for scope 0, else (string) $scope
+ * @param 	string 		$base 			Bare constant name
+ * @param 	array 		$def 			Field definition (type/placeholder/css/mandatory/help/choices)
+ * @return 	void
+ */
+function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix, $base, $def)
+{
+	$key = $base.$scopeSuffix;
+
+	if ($scope == 0) {
+		// Common parameters: default value used by every terminal unless overridden.
+		$item = $formSetup->newItem($key);
+		$item->nameText = $langs->trans($base);
+		if (!empty($def['css'])) {
+			$item->cssClass = $def['css'];
+		}
+		if (!empty($def['placeholder'])) {
+			$item->fieldAttr['placeholder'] = $def['placeholder'];
+		}
+		if (!empty($def['mandatory'])) {
+			$item->fieldParams['isMandatory'] = 1;
+		}
+		if (!empty($def['help'])) {
+			$item->helpText = $langs->trans($def['help']);
+		}
+		if ($def['type'] == 'select') {
+			$item->setAsSelect($def['choices']);
+		} elseif ($def['type'] == 'number') {
+			$item->setAsNumber();
+		}
+	} else {
+		// Terminal parameters: inherit the common value or define a specific one.
+		$options = array();
+		if (!empty($def['choices'])) {
+			$options['choices'] = $def['choices'];
+		}
+		if (!empty($def['placeholder'])) {
+			$options['placeholder'] = $def['placeholder'];
+		}
+
+		$item = $formSetup->newItem($key);
+		$item->nameText = $langs->trans($base);
+		$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
+		$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
+	}
+}
+
+/**
  * Build the edit-mode HTML for a per-terminal parameter that can either inherit the
  * common value or define a specific one. Renders a "specific value" checkbox followed
  * by the input widget, greyed out (disabled) as long as the terminal inherits the common value.

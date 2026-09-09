@@ -37,6 +37,8 @@ TakeposconnSectionPrinter = Impression des tickets
 WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance
+TakeposconnHelpScaleUrl = URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées
+TakeposconnHelpDisplayUrl = URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l'afficheur client
 
 Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Utiliser SSL ?

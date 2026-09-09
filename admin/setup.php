@@ -121,22 +121,26 @@ $fieldOptions = array(
 	'non' => $langs->trans('NON'),
 );
 
-// Definition of every parameter that has a common value and can be overridden per terminal,
-// grouped by device (rendered as one titled table per group, propal-admin-page style). 'type'
-// drives both the common widget and the per-terminal override widget. DIRECTPRINTWHB_SECURE
-// lives under the printer group: it's only used to build the printer's WHB WebSocket URL
-// (js/takeposconnector.js.php:667) — the scale/display URLs already carry their own ws:// or
-// wss:// scheme, so it has no effect on them.
+// SSL is kept separate from the device sections below: it's only used to build the printer's
+// WHB WebSocket URL (js/takeposconnector.js.php:667) — the scale/display URLs already carry
+// their own ws:// or wss:// scheme — but it's rendered on its own, not folded into the
+// printer table, since it reads as a connection-wide switch to anyone configuring the module.
+$sslParam = array(
+	'DIRECTPRINTWHB_SECURE' => array('type' => 'select', 'choices' => $fieldOptions),
+);
+
+// Definition of every other parameter that has a common value and can be overridden per
+// terminal, grouped by device (rendered as one titled table per group, propal-admin-page
+// style). 'type' drives both the common widget and the per-terminal override widget.
 $paramSections = array(
 	'TakeposconnSectionScale' => array(
-		'WEIGHINGSCALE_WEBSOCKET_URL' => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées'),
+		'WEIGHINGSCALE_WEBSOCKET_URL' => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpScaleUrl'),
 		'WEIGHINGSCALE_PROTOCOL'      => array('type' => 'select', 'choices' => $TField),
 	),
 	'TakeposconnSectionDisplay' => array(
-		'CUSTOMERDISPLAY_WEBSOCKET_URL' => array('type' => 'text', 'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l\'afficheur client'),
+		'CUSTOMERDISPLAY_WEBSOCKET_URL' => array('type' => 'text', 'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpDisplayUrl'),
 	),
 	'TakeposconnSectionPrinter' => array(
-		'DIRECTPRINTWHB_SECURE'                => array('type' => 'select', 'choices' => $fieldOptions),
 		'DIRECTPRINTWHB_IPADDRESS'             => array('type' => 'text',   'placeholder' => 'localhost'),
 		'DIRECTPRINTWHB_PORT'                  => array('type' => 'number', 'placeholder' => '12212'),
 		'DIRECTPRINTWHB_PRINTER_SERVICE_NAME'  => array('type' => 'text',   'placeholder' => '/printer'),
@@ -150,46 +154,12 @@ $paramSections = array(
 // Build the items for the current scope only: this page ever renders/saves one scope
 // (scope 0 = common parameters, scope N = terminal N), selected via the tabs built by
 // takeposconnectorAdminPrepareHead().
+foreach ($sslParam as $base => $def) {
+	takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix, $base, $def);
+}
 foreach ($paramSections as $fields) {
 	foreach ($fields as $base => $def) {
-		$key = $base.$scopeSuffix;
-
-		if ($scope == 0) {
-			// Common parameters: default value used by every terminal unless overridden.
-			$item = $formSetup->newItem($key);
-			$item->nameText = $langs->trans($base);
-			if (!empty($def['css'])) {
-				$item->cssClass = $def['css'];
-			}
-			if (!empty($def['placeholder'])) {
-				$item->fieldAttr['placeholder'] = $def['placeholder'];
-			}
-			if (!empty($def['mandatory'])) {
-				$item->fieldParams['isMandatory'] = 1;
-			}
-			if (!empty($def['help'])) {
-				$item->helpText = $def['help'];
-			}
-			if ($def['type'] == 'select') {
-				$item->setAsSelect($def['choices']);
-			} elseif ($def['type'] == 'number') {
-				$item->setAsNumber();
-			}
-		} else {
-			// Terminal parameters: inherit the common value or define a specific one.
-			$options = array();
-			if (!empty($def['choices'])) {
-				$options['choices'] = $def['choices'];
-			}
-			if (!empty($def['placeholder'])) {
-				$options['placeholder'] = $def['placeholder'];
-			}
-
-			$item = $formSetup->newItem($key);
-			$item->nameText = $langs->trans($base);
-			$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
-			$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
-		}
+		takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix, $base, $def);
 	}
 }
 
@@ -347,6 +317,19 @@ if ($action == 'edit') {
 		print '<input type="hidden" name="token" value="'.newToken().'">';
 		print '<input type="hidden" name="action" value="update">';
 		print '<input type="hidden" name="scope" value="'.$scope.'">';
+
+		// SSL stands on its own, not folded into a device section (see comment above $sslParam).
+		print '<div class="div-table-responsive-no-min">';
+		print '<table class="noborder centpercent">';
+		foreach ($sslParam as $base => $def) {
+			$key = $base.$scopeSuffix;
+			if (isset($formSetup->items[$key])) {
+				print $formSetup->generateLineOutput($formSetup->items[$key], true);
+			}
+		}
+		print '</table>';
+		print '</div>';
+		print '<br>';
 
 		$firstSection = true;
 		foreach ($paramSections as $sectionLabelKey => $fields) {
