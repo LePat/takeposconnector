@@ -16,6 +16,7 @@ It supports several transports/protocols to talk to that hardware:
 Other features:
 - **Per-terminal configuration with inheritance**: every parameter (scale/display WebSocket URL, printer connection, receipt width, etc.) has one common value shared by all terminals, and can optionally be overridden per terminal from a tabbed setup page — no need to repeat the same settings on every till.
 - **Hardware connection status indicators** in the TakePOS top bar (scale, customer display, printer, cash drawer), with automatic WebSocket reconnection.
+![State panel](img/state_panel.png "Connections' states")
 - **Configurable receipt width** (characters per line), per terminal, to match narrow thermal printers (e.g. 42 columns) instead of the 48-column default.
 
 ## Requirements
