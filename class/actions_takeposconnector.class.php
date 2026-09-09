@@ -17,18 +17,18 @@
  */
 
 /**
- * \file    takeposasorder/class/actions_takeposasorder.class.php
- * \ingroup takeposasorder
- * \brief   Example hook overload.
- *
- * TODO: Write detailed description here.
+ * \file    takeposconnector/class/actions_takeposconnector.class.php
+ * \ingroup takeposconnector
+ * \brief   Hook overload: injects the module's JS/CSS into the TakePOS frontend
+ *          (addHtmlHeader) and exposes fk_unit/price on rendered product tiles
+ *          so TakePOS can auto-trigger the weighing scale (completeJSProductDisplay).
  */
 
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 
 /**
- * Class ActionsTakePOSAsOrder
+ * Class ActionsTakeposConnector
  */
 class ActionsTakeposConnector extends CommonHookActions
 {
@@ -67,12 +67,16 @@ class ActionsTakeposConnector extends CommonHookActions
 	    if ($parameters['caller'] == 'loadProducts') {
 	    	$term = empty($_SESSION['takeposterminal']) ? 1 : $_SESSION['takeposterminal'];
 	    	$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $term);
-	    	
-	    	global $db;
-	    	$customer = new Societe($db);
-	    	$customer->fetch($socid);
-	    	$priceLevel = $customer->price_level;
-	    	
+
+	    	$priceLevel = 0;
+	    	if ($socid > 0) {
+	    		global $db;
+	    		$customer = new Societe($db);
+	    		if ($customer->fetch($socid) > 0) {
+	    			$priceLevel = $customer->price_level;
+	    		}
+	    	}
+
 	    	if ($priceLevel) {
 		        $this->resprints = '
 					$("#prodiv"+ishow).data("unit", data[idata][\'fk_unit\']);
