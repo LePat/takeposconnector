@@ -22,7 +22,9 @@
  */
 
 /**
- * Prepare admin pages header
+ * Prepare admin pages header: one tab for the common parameters, one per configured
+ * terminal (both pointing to setup.php with a different ?scope=N), then About. Same head
+ * array whichever page calls it (setup.php or about.php) — only the active tab differs.
  *
  * @return array
  */
@@ -36,16 +38,22 @@ function takeposconnectorAdminPrepareHead()
 	$head = array();
 
 	$head[$h][0] = dol_buildpath("/takeposconnector/admin/setup.php", 1);
-	$head[$h][1] = $langs->trans("Settings");
-	$head[$h][2] = 'settings';
+	$head[$h][1] = $langs->trans("TakeposconnCommonParameters");
+	$head[$h][2] = 'scope0';
 	$h++;
 
-	/*
-	$head[$h][0] = dol_buildpath("/takeposconnector/admin/myobject_extrafields.php", 1);
-	$head[$h][1] = $langs->trans("ExtraFields");
-	$head[$h][2] = 'myobject_extrafields';
-	$h++;
-	*/
+	for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
+		$terminalLabel = $langs->trans('Terminal').' '.$indexTerminal;
+		$terminalName = getDolGlobalString('TAKEPOS_TERMINAL_NAME_'.$indexTerminal);
+		if ($terminalName !== '') {
+			$terminalLabel .= ': '.$terminalName;
+		}
+
+		$head[$h][0] = dol_buildpath("/takeposconnector/admin/setup.php", 1).'?scope='.$indexTerminal;
+		$head[$h][1] = $terminalLabel;
+		$head[$h][2] = 'scope'.$indexTerminal;
+		$h++;
+	}
 
 	$head[$h][0] = dol_buildpath("/takeposconnector/admin/about.php", 1);
 	$head[$h][1] = $langs->trans("About");
@@ -183,49 +191,22 @@ function takeposconnectorSaveOverrideItem($item)
 }
 
 /**
- * Build the <style>/<script> block for the per-terminal tabs: one <div class="takeposconn-scope">
- * per terminal (plus one for the common parameters), each holding its own titled tables (one per
- * device section, propal-admin-page style: load_fiche_titre() + <table>). Tabs and scopes are
- * built server-side (see admin/setup.php); this only wires the click-to-show/hide behaviour.
+ * CSS for the setup page: keeps the title/field column widths consistent across every table
+ * (one per device section, see admin/setup.php). No JS needed: switching scope (common
+ * parameters / terminal N) is a real Dolibarr tab built by takeposconnectorAdminPrepareHead(),
+ * not a client-side toggle — each scope is its own page load.
  *
- * The setup stays a single form with a single Save button: switching tabs only shows/hides a
- * scope's <div> client-side, nothing is submitted on tab change, hidden terminals' inputs are
- * still posted on Save. Must be printed right after the tabs/scopes markup, itself wrapped in a
- * <div id="takeposconn-tabbed-setup">.
- *
- * @return 	string 	The <style> + <script> block
+ * @return 	string 	The <style> block
  */
-function takeposconnectorTabsScript()
+function takeposconnectorSetupStyle()
 {
 	return <<<'HTML'
 <style>
-#takeposconn-tabbed-setup .takeposconn-tabs { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:3px; }
-#takeposconn-tabbed-setup .takeposconn-tabs li { padding:6px 14px; cursor:pointer; border:1px solid var(--colortopbordertitle1, #ccc); border-bottom:none; border-radius:5px 5px 0 0; background:var(--colorbacktitle1, #f4f4f4); white-space:nowrap; }
-#takeposconn-tabbed-setup .takeposconn-tabs li.active { background:var(--colorbackbody, #fff); font-weight:bold; }
-#takeposconn-tabbed-setup table.noborder { margin-top:0; }
-#takeposconn-tabbed-setup .col-setup-title { width:400px; max-width:400px; }
-#takeposconn-tabbed-setup input[type="text"],
-#takeposconn-tabbed-setup input[type="number"],
-#takeposconn-tabbed-setup select { width:400px; min-width:0; max-width:100%; box-sizing:border-box; }
+.takeposconn-setup table.noborder { margin-top:0; }
+.takeposconn-setup .col-setup-title { width:400px; max-width:400px; }
+.takeposconn-setup input[type="text"],
+.takeposconn-setup input[type="number"],
+.takeposconn-setup select { width:400px; min-width:0; max-width:100%; box-sizing:border-box; }
 </style>
-<script>
-jQuery(document).ready(function() {
-	var $root = jQuery("#takeposconn-tabbed-setup");
-	var $nav = $root.find(".takeposconn-tabs");
-	var $scopes = $root.find(".takeposconn-scope");
-	if ($scopes.length < 2) {
-		$nav.hide();
-		$scopes.show();
-		return;
-	}
-
-	function showSection(sec) {
-		$nav.find("li").removeClass("active").filter('[data-sec="' + sec + '"]').addClass("active");
-		$scopes.hide().filter('[data-sec="' + sec + '"]').show();
-	}
-	$nav.on("click", "li", function() { showSection(jQuery(this).data("sec")); });
-	showSection($nav.find("li").first().data("sec"));
-});
-</script>
 HTML;
 }

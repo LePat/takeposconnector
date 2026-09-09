@@ -68,6 +68,15 @@ $action = GETPOST('action', 'aZ09');
 $backtopage = GETPOST('backtopage', 'alpha');
 $modulepart = GETPOST('modulepart', 'aZ09');	// Used by actions_setmoduleoptions.inc.php
 
+// Scope of the page: 0 = common parameters, N = terminal N. Each scope is its own tab
+// (see takeposconnectorAdminPrepareHead()) and its own <form>: only that scope's fields
+// exist on the page, so saving only ever touches that scope's constants.
+$scope = GETPOSTINT('scope');
+if ($scope < 0 || $scope > getDolGlobalInt('TAKEPOS_NUM_TERMINALS')) {
+	$scope = 0;
+}
+$scopeSuffix = $scope ? (string) $scope : '';
+
 $value = GETPOST('value', 'alpha');
 $label = GETPOST('label', 'alpha');
 $scandir = GETPOST('scan_dir', 'alpha');
@@ -138,36 +147,36 @@ $paramSections = array(
 	),
 );
 
-// ----- Common parameters (default value used by every terminal unless overridden) -----
+// Build the items for the current scope only: this page ever renders/saves one scope
+// (scope 0 = common parameters, scope N = terminal N), selected via the tabs built by
+// takeposconnectorAdminPrepareHead().
 foreach ($paramSections as $fields) {
 	foreach ($fields as $base => $def) {
-		$item = $formSetup->newItem($base);
-		$item->nameText = $langs->trans($base);
-		if (!empty($def['css'])) {
-			$item->cssClass = $def['css'];
-		}
-		if (!empty($def['placeholder'])) {
-			$item->fieldAttr['placeholder'] = $def['placeholder'];
-		}
-		if (!empty($def['mandatory'])) {
-			$item->fieldParams['isMandatory'] = 1;
-		}
-		if (!empty($def['help'])) {
-			$item->helpText = $def['help'];
-		}
-		if ($def['type'] == 'select') {
-			$item->setAsSelect($def['choices']);
-		} elseif ($def['type'] == 'number') {
-			$item->setAsNumber();
-		}
-	}
-}
+		$key = $base.$scopeSuffix;
 
-// ----- Per-terminal parameters (inherit the common value or define a specific one) -----
-for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
-	foreach ($paramSections as $fields) {
-		foreach ($fields as $base => $def) {
-			$key = $base.$indexTerminal;
+		if ($scope == 0) {
+			// Common parameters: default value used by every terminal unless overridden.
+			$item = $formSetup->newItem($key);
+			$item->nameText = $langs->trans($base);
+			if (!empty($def['css'])) {
+				$item->cssClass = $def['css'];
+			}
+			if (!empty($def['placeholder'])) {
+				$item->fieldAttr['placeholder'] = $def['placeholder'];
+			}
+			if (!empty($def['mandatory'])) {
+				$item->fieldParams['isMandatory'] = 1;
+			}
+			if (!empty($def['help'])) {
+				$item->helpText = $def['help'];
+			}
+			if ($def['type'] == 'select') {
+				$item->setAsSelect($def['choices']);
+			} elseif ($def['type'] == 'number') {
+				$item->setAsNumber();
+			}
+		} else {
+			// Terminal parameters: inherit the common value or define a specific one.
 			$options = array();
 			if (!empty($def['choices'])) {
 				$options['choices'] = $def['choices'];
@@ -314,9 +323,9 @@ $linkback = '<a href="'.($backtopage ? $backtopage : DOL_URL_ROOT.'/admin/module
 
 print load_fiche_titre($langs->trans($page_name), $linkback, 'title_setup');
 
-// Configuration header
+// Configuration header (one tab per scope: common parameters, then one per terminal, then About)
 $head = takeposconnectorAdminPrepareHead();
-print dol_get_fiche_head($head, 'settings', $langs->trans($page_name), -1, "takeposconnector@takeposconnector");
+print dol_get_fiche_head($head, 'scope'.$scope, $langs->trans($page_name), -1, "takeposconnector@takeposconnector");
 
 // Setup page goes here
 echo '<span class="opacitymedium">'.$langs->trans("TakePOS Connector").'</span><br><br>';
@@ -328,64 +337,44 @@ print info_admin($htmltext, 0, 0, 'warning');
 
 if ($action == 'edit') {
 	if ($useFormSetup && (float) DOL_VERSION >= 15) {
-		// One tab per scope (common parameters, then one per terminal), each containing one
-		// titled table per device section (propal admin page style: load_fiche_titre() + table).
-		$scopes = array();
-		$scopes[0] = array('label' => $langs->trans('TakeposconnCommonParameters'), 'suffix' => '');
-		for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
-			$terminalLabel = $langs->trans('Terminal').' '.$indexTerminal;
-			$terminalName = getDolGlobalString('TAKEPOS_TERMINAL_NAME_'.$indexTerminal);
-			if ($terminalName !== '') {
-				$terminalLabel .= ': '.$terminalName;
-			}
-			$scopes[$indexTerminal] = array('label' => $terminalLabel, 'suffix' => (string) $indexTerminal);
-		}
-
-		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'" autocomplete="off">';
+		// This page only ever renders the current scope (see $scope/$scopeSuffix above):
+		// switching scope is a real Dolibarr tab (takeposconnectorAdminPrepareHead()), not a
+		// client-side toggle. One titled table per device section (propal admin page style:
+		// load_fiche_titre() + table).
+		print takeposconnectorSetupStyle();
+		print '<div class="takeposconn-setup">';
+		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?scope='.$scope.'" autocomplete="off">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';
 		print '<input type="hidden" name="action" value="update">';
+		print '<input type="hidden" name="scope" value="'.$scope.'">';
 
-		print '<div id="takeposconn-tabbed-setup">';
-
-		print '<ul class="takeposconn-tabs">';
-		foreach ($scopes as $sec => $scope) {
-			print '<li data-sec="'.$sec.'">'.dol_escape_htmltag($scope['label']).'</li>';
-		}
-		print '</ul>';
-
-		foreach ($scopes as $sec => $scope) {
-			print '<div class="takeposconn-scope" data-sec="'.$sec.'">';
-			$firstSection = true;
-			foreach ($paramSections as $sectionLabelKey => $fields) {
-				if (!$firstSection) {
-					print '<br>';
-				}
-				$firstSection = false;
-				print load_fiche_titre($langs->trans($sectionLabelKey), '', '');
-				print '<div class="div-table-responsive-no-min">';
-				print '<table class="noborder centpercent">';
-				foreach ($fields as $base => $def) {
-					$key = $base.$scope['suffix'];
-					if (isset($formSetup->items[$key])) {
-						print $formSetup->generateLineOutput($formSetup->items[$key], true);
-					}
-				}
-				print '</table>';
-				print '</div>';
+		$firstSection = true;
+		foreach ($paramSections as $sectionLabelKey => $fields) {
+			if (!$firstSection) {
+				print '<br>';
 			}
+			$firstSection = false;
+			print load_fiche_titre($langs->trans($sectionLabelKey), '', '');
+			print '<div class="div-table-responsive-no-min">';
+			print '<table class="noborder centpercent">';
+			foreach ($fields as $base => $def) {
+				$key = $base.$scopeSuffix;
+				if (isset($formSetup->items[$key])) {
+					print $formSetup->generateLineOutput($formSetup->items[$key], true);
+				}
+			}
+			print '</table>';
 			print '</div>';
 		}
-
-		print '</div>'; // #takeposconn-tabbed-setup
 
 		print '<div class="form-setup-button-container center">';
 		print '<input class="button button-save reposition" type="submit" value="'.$langs->trans("Save").'" name="save">';
 		print '</div>';
 
 		print '</form>';
+		print '</div>'; // .takeposconn-setup
 
 		print takeposconnectorOverrideJs();
-		print takeposconnectorTabsScript();
 	} else {
 		print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';
