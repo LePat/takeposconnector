@@ -33,7 +33,7 @@ WEIGHINGSCALE_WEBSOCKET_URL = Weighing scale WebSocket URL
 CUSTOMERDISPLAY_WEBSOCKET_URL = Customer display WebSocket URL
 WEIGHINGSCALE_PROTOCOL = Scale communication protocol
 
-Terminal = Printer invoices
+Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Use SSL ?
 DIRECTPRINTWHB_IPADDRESS = IP Adress/Host name
 DIRECTPRINTWHB_PORT = TCP port number

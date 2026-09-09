@@ -33,7 +33,7 @@ WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance
 
-Terminal = Imprimante pour les factures
+Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Utiliser SSL ?
 DIRECTPRINTWHB_IPADDRESS = Adresse IP/Nom de l'hôte
 DIRECTPRINTWHB_PORT = Numéro de port TCP
