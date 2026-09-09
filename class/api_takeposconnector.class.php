@@ -78,7 +78,17 @@ class TakePOSConnector extends DolibarrApi {
     		if ($line->id == $lineid) {
     			$product = new Product($this->db);
     			$product->fetch($line->fk_product);
-    			return $this->_cleanObjectDatas($product);
+    			// Only the fields consumed by TakePOS's weighing scale JS (fk_unit + price)
+    			// are returned: the full Product object also carries cost prices, margins,
+    			// accountancy codes, supplier data, etc. that this endpoint has no reason to expose.
+    			return array(
+    				'id' => $product->id,
+    				'ref' => $product->ref,
+    				'label' => $product->label,
+    				'fk_unit' => $product->fk_unit,
+    				'price_ttc' => $product->price_ttc,
+    				'multiprices_ttc' => $product->multiprices_ttc,
+    			);
     		}
     	}
     	return;

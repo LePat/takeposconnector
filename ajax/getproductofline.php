@@ -98,13 +98,17 @@ try {
 				echo json_encode(array('error' => 'Product not found'));
 				exit;
 			}
-			// Strip backend/internal fields before serialising.
-			unset($product->db);
-			unset($product->error);
-			unset($product->errors);
-			unset($product->fields);
-			unset($product->context);
-			echo json_encode($product);
+			// Only the fields consumed by TakePOS's weighing scale JS (fk_unit + price)
+			// are returned: the full Product object also carries cost prices, margins,
+			// accountancy codes, supplier data, etc. that this endpoint has no reason to expose.
+			echo json_encode(array(
+				'id' => $product->id,
+				'ref' => $product->ref,
+				'label' => $product->label,
+				'fk_unit' => $product->fk_unit,
+				'price_ttc' => $product->price_ttc,
+				'multiprices_ttc' => $product->multiprices_ttc,
+			));
 			exit;
 		}
 	}
