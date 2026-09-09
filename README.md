@@ -2,11 +2,21 @@
 
 ## Features
 
-The TakePOSConnector module main feature si to allow TakePOS to use following hardware:
+The TakePOSConnector module's main feature is to allow TakePOS to use the following hardware:
 - weighing scale
 - thermal printer
 - customer display
 - cash drawer
+
+It supports several transports/protocols to talk to that hardware:
+- **Dialog-06 protocol** for weighing scales that require an explicit request/response exchange (weight + unit price) instead of a continuous weight stream.
+- **Continuous weight transmission** (older/simpler scale protocols).
+- **ESC/POS thermal printers** over the Webapp-Hardware-Bridge (WHB), including raw binary output for tickets.
+
+Other features:
+- **Per-terminal configuration with inheritance**: every parameter (scale/display WebSocket URL, printer connection, receipt width, etc.) has one common value shared by all terminals, and can optionally be overridden per terminal from a tabbed setup page — no need to repeat the same settings on every till.
+- **Hardware connection status indicators** in the TakePOS top bar (scale, customer display, printer, cash drawer), with automatic WebSocket reconnection.
+- **Configurable receipt width** (characters per line), per terminal, to match narrow thermal printers (e.g. 42 columns) instead of the 48-column default.
 
 ## Requirements
 
@@ -17,7 +27,7 @@ The TakePOSConnector module main feature si to allow TakePOS to use following ha
 
 #### Global
 
-- Install the takeposconnector module from: https://github.com/LePat/TakePOS-Connector
+- Install the takeposconnector module from: https://github.com/LePat/takeposconnector
 - Activate the takeposconnector module.
 - Add the parameter TAKEPOS_PRINT_METHOD value = takeposconnector
 - Set the print server by adding the parameter TAKEPOS_PRINT_SERVER, value = http://localhost:12212
@@ -62,6 +72,8 @@ In this case, change the parameter TAKEPOS_PRINT_SERVER value to localhost or 12
 #### Screenshot of TakePOSConnector module setup
 
 ![Screenshot takeposconnector](img/setup.png "TakeposConnector")
+
+> Note: this screenshot predates the tabbed per-terminal setup page and needs to be refreshed.
 
 ## Misc
 
