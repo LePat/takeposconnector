@@ -661,7 +661,11 @@ class dolReceiptPrinter extends Printer
 			for ($tplline = 0; $tplline < $nboflines; $tplline++) {
 				switch ($vals[$tplline]['tag']) {
 					case 'DOL_PRINT_TEXT':
-						$this->printer->text($vals[$tplline]['value']);
+						// xml_parse_into_struct() omits the 'value' key entirely when the tag has
+						// zero characters of text content — e.g. {dol_print_text}{dol_value_xxx}
+						// where {dol_value_xxx} was substituted with an empty string (field not
+						// filled for this customer/company). Printer::text() requires a string.
+						$this->printer->text((string) ($vals[$tplline]['value'] ?? ''));
 						break;
 					case 'DOL_VALUE_OBJECT_STATUS':
 						// Increase counter by 1 ici car ce n'est plus fait dans le blockedlog/ajax/block-add.php comme avant
@@ -934,7 +938,7 @@ class dolReceiptPrinter extends Printer
 						break;
 					default:
 						$this->printer->text($vals[$tplline]['tag']);
-						$this->printer->text($vals[$tplline]['value']);
+						$this->printer->text((string) ($vals[$tplline]['value'] ?? ''));
 						$this->errors[] = 'UnknowTag: &lt;'.strtolower($vals[$tplline]['tag']).'&gt;';
 						$error++;
 						break;
