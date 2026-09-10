@@ -86,7 +86,7 @@ if (empty($user->rights->takepos->run)) {
  */
 
 if ($action == "printinvoiceticket" && $term != '' && $id > 0 && !empty($user->rights->facture->lire)) {
-	require_once '../dolreceiptprinter.class.php';
+	require_once '../class/dolreceiptprinter.class.php';
 	require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 	$printer = new dolReceiptPrinter($db);
 	$object = new Facture($db);
@@ -101,7 +101,7 @@ if ($action == "printinvoiceticket" && $term != '' && $id > 0 && !empty($user->r
 // dolReceiptPrinter::openDrawer()). Mirrors core's own takepos/ajax/ajax.php?action=opendrawer,
 // which instead prints server-side and can't reach hardware that's only wired to the browser.
 if ($action == "opendrawer" && $term != '') {
-	require_once '../dolreceiptprinter.class.php';
+	require_once '../class/dolreceiptprinter.class.php';
 	$printer = new dolReceiptPrinter($db);
 	$conf->global->TAKEPOS_PRINT_METHOD = "takeposconnector";
 	$printer->openDrawer($conf->global->{'TAKEPOS_PRINTER_TO_USE'.$term});

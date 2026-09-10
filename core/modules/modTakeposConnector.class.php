@@ -2,7 +2,7 @@
 /* Copyright (C) 2004-2018  Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2018-2019  Nicolas ZABOURI         <info@inovea-conseil.com>
  * Copyright (C) 2019-2020  Frédéric France         <frederic.france@netlogic.fr>
- * Copyright (C) 2022 SuperAdmin
+ * Copyright (C) 2022 pat <info@lia-concept.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,8 +68,8 @@ class modTakeposConnector extends DolibarrModules
 		$this->descriptionlong = "Hardware TakePOS Connector";
 
 		// Author
-		$this->editor_name = 'TakePOS';
-		$this->editor_url = 'https://github.com/LePat/takeposconnector';
+		$this->editor_name = 'Lia Concept';
+		$this->editor_url = 'https://lia-concept.fr';
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
 		$this->version = '2.0';
@@ -304,7 +304,7 @@ class modTakeposConnector extends DolibarrModules
 		$this->remove($options);
 
 		$sql = array();
-		$sql[] = "INSERT INTO llx_overwrite_trans (lang, transkey, transvalue) VALUES ('fr_FR', 'WeighingScale', 'Poids');";
+		$sql[] = "INSERT INTO ".MAIN_DB_PREFIX."overwrite_trans (lang, transkey, transvalue) VALUES ('fr_FR', 'WeighingScale', 'Poids');";
 
 		return $this->_init($sql, $options);
 	}
@@ -320,7 +320,7 @@ class modTakeposConnector extends DolibarrModules
 	public function remove($options = '')
 	{
 		$sql = array();
-		$sql[] = "DELETE FROM llx_overwrite_trans WHERE lang = 'fr_FR' AND transkey = 'WeighingScale' AND transvalue = 'Poids';";
+		$sql[] = "DELETE FROM ".MAIN_DB_PREFIX."overwrite_trans WHERE lang = 'fr_FR' AND transkey = 'WeighingScale' AND transvalue = 'Poids';";
 		return $this->_remove($sql, $options);
 	}
 }

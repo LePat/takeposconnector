@@ -76,9 +76,15 @@ In this case, change the parameter TAKEPOS_PRINT_SERVER value to localhost or 12
 
 > Note: this screenshot predates the tabbed per-terminal setup page and needs to be refreshed.
 
+## Credits
+
+This module is a fork of Andreu Bisquerra's original
+[TakePOS-Connector](https://github.com/andreubisquerra/TakePOS-Connector) Dolibarr module, now
+independently maintained. The original copyright notices are kept in the relevant source files.
+
 ## Misc
 
-TakePOS Connector (this one), TakePOS Connector Java and New TakePOS Connector PHP habe different purposes.
+TakePOS Connector (this one), TakePOS Connector Java and New TakePOS Connector PHP have different purposes.
 
 Other external modules are available on [Dolistore.com](https://www.dolistore.com).
 

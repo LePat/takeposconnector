@@ -105,6 +105,13 @@ ou non. Si elle ne l'est pas, elle sera complétée ainsi :
 > Note : cette capture d'écran est antérieure à la page de configuration à onglets par
 > terminal et doit être mise à jour.
 
+## Crédits
+
+Ce module est un fork du module Dolibarr d'origine
+[TakePOS-Connector](https://github.com/andreubisquerra/TakePOS-Connector) d'Andreu Bisquerra,
+désormais maintenu de façon indépendante. Les mentions de copyright d'origine sont conservées
+dans les fichiers sources concernés.
+
 ## Divers
 
 TakePOS Connector (celui-ci), TakePOS Connector Java et New TakePOS Connector PHP ont des
