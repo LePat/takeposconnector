@@ -63,7 +63,7 @@ class modTakeposConnector extends DolibarrModules
 		$this->name = preg_replace('/^mod/i', '', get_class($this));
 
 		// Module description, used if translation string 'ModuleTakeposConnectorDesc' not found (TakeposConnector is name of module).
-		$this->description = "Takepos Connector";
+		$this->description = "TakePOS Connector";
 		// Used only if file README.md and README-LL.md not found.
 		$this->descriptionlong = "Hardware TakePOS Connector";
 
