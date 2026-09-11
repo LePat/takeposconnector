@@ -90,6 +90,11 @@ if (!$user->admin) {
 	accessforbidden();
 }
 
+// Make sure core (>= 24.0.1) actually routes the scale/customer display through WHB. See
+// takeposconnectorEnsureWhbRouting()'s docblock for why this can't rely solely on
+// $this->const at module activation.
+takeposconnectorEnsureWhbRouting();
+
 // Set this to 1 to use the factory to manage constants. Warning, the generated module will be compatible with version v15+ only
 $useFormSetup = 1;
 
@@ -299,7 +304,7 @@ print load_fiche_titre($langs->trans($page_name), $linkback, 'title_setup');
 
 // Configuration header (one tab per scope: common parameters, then one per terminal, then About)
 $head = takeposconnectorAdminPrepareHead();
-print dol_get_fiche_head($head, 'scope'.$scope, $langs->trans($page_name), -1, "takeposconnector@takeposconnector");
+print dol_get_fiche_head($head, 'scope'.$scope, $langs->trans($page_name), -1, "object_takeposconnector@takeposconnector");
 
 $htmltext = $langs->trans('TakeposconnRequiresWHB').' ';
 $htmltext .= '<a target="_blank" href="https://github.com/LePat/webapp-hardware-bridge/releases">'.$langs->trans('TakeposconnDownloadWHB').'</a>';

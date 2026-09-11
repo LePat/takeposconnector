@@ -93,7 +93,7 @@ print load_fiche_titre($langs->trans($page_name), $linkback, 'title_setup');
 
 // Configuration header
 $head = takeposconnectorAdminPrepareHead();
-print dol_get_fiche_head($head, 'about', $langs->trans($page_name), 0, 'takeposconnector@takeposconnector');
+print dol_get_fiche_head($head, 'about', $langs->trans($page_name), 0, 'object_takeposconnector@takeposconnector');
 
 // Same reminder as on the other tabs: the README's own title (rendered below by
 // getDescLong()) starts with a generic "for Dolibarr ERP CRM" heading/link that isn't

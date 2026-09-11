@@ -145,7 +145,12 @@ class modTakeposConnector extends DolibarrModules
 
 		// Prerequisites
 		$this->phpmin = array(7, 2); // Minimum version of PHP required by module
-		$this->need_dolibarr_version = array(23, 0); // Minimum version of Dolibarr required by module
+		// This module's whole purpose is routing the weighing scale and customer display through
+		// WHB over WebSocket. Core only gained that branch (TAKEPOS_CONNECTOR_TO_WHB_SCALE /
+		// TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY, see $this->const below) in 24.0.1 — on 23.x
+		// core has no such branch at all, so the scale/display always hit the legacy plain-HTTP
+		// TAKEPOS_PRINT_SERVER endpoints instead, regardless of any config on our side.
+		$this->need_dolibarr_version = array(24, 0, 1); // Minimum version of Dolibarr required by module
 
 		// Messages at activation
 		$this->warnings_activation = array(); // Warning to show when we activate module. array('always'='text') or array('FR'='textfr','MX'='textmx'...)
@@ -165,6 +170,15 @@ class modTakeposConnector extends DolibarrModules
 			2 => array('DIRECTPRINTWHB_PORT', 'chaine', '12212', 'Default WHB port', 0),
 			3 => array('DIRECTPRINTWHB_PRINTER_SERVICE_NAME', 'chaine', '/print/INVOICE', 'Default WHB printer service path', 0),
 			4 => array('WEIGHINGSCALE_PROTOCOL', 'chaine', 'none', 'Default weighing scale protocol', 0),
+			// This module exists to route the scale and customer display through WHB over
+			// WebSocket; without these two core constants set, TakePOS core (>=24.0.1) falls back
+			// to its legacy plain-HTTP TAKEPOS_PRINT_SERVER endpoints instead (see
+			// htdocs/takepos/index.php's WeighingScale(), pay.php/invoice.php customer-display
+			// push). Only takes effect on a fresh activation of this module — an already-active
+			// install upgrading its code gets these from takeposconnectorEnsureWhbRouting()
+			// instead (called from admin/setup.php), since init() doesn't rerun on code changes.
+			5 => array('TAKEPOS_CONNECTOR_TO_WHB_SCALE', 'chaine', '1', 'Route the weighing scale through WHB (core >= 24.0.1)', 0),
+			6 => array('TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY', 'chaine', '1', 'Route the customer display through WHB (core >= 24.0.1)', 0),
 		);
 
 		// Some keys to add into the overwriting translation tables

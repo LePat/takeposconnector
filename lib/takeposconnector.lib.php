@@ -22,6 +22,34 @@
  */
 
 /**
+ * Ensure the two core constants that make TakePOS (core >= 24.0.1) route the weighing scale
+ * and customer display through WHB over WebSocket are set to 1 — without them, core silently
+ * falls back to its legacy plain-HTTP TAKEPOS_PRINT_SERVER endpoints (see
+ * htdocs/takepos/index.php's WeighingScale(), pay.php/invoice.php customer-display push),
+ * which this module's WHB-based protocol never uses.
+ *
+ * This module's own $this->const (core/modules/modTakeposConnector.class.php) already sets
+ * these on a *fresh* activation, but init() doesn't rerun when the module's code is upgraded
+ * in place — so an already-active install (the common case once this module is deployed)
+ * would otherwise never pick up this default. Called from admin/setup.php on every load
+ * instead: idempotent (only writes when a value is actually missing/wrong), so it's a no-op
+ * on every subsequent page load once set.
+ *
+ * @return 	void
+ */
+function takeposconnectorEnsureWhbRouting()
+{
+	global $db, $conf;
+
+	$constants = array('TAKEPOS_CONNECTOR_TO_WHB_SCALE', 'TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY');
+	foreach ($constants as $constName) {
+		if (getDolGlobalString($constName) !== '1') {
+			dolibarr_set_const($db, $constName, '1', 'chaine', 0, '', $conf->entity);
+		}
+	}
+}
+
+/**
  * Prepare admin pages header: one tab for the common parameters, one per configured
  * terminal (both pointing to setup.php with a different ?scope=N), then About. Same head
  * array whichever page calls it (setup.php or about.php) — only the active tab differs.
