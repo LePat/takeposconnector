@@ -587,7 +587,7 @@ class dolReceiptPrinter extends Printer
 		$error = 0;
 		$ret = $this->loadTemplate($templateid);
 
-		// tags a remplacer par leur valeur avant de parser (dol_value_xxx)
+		// tags to replace with their value before parsing (dol_value_xxx)
 		$this->template = str_replace('{dol_value_object_id}', $object->id, $this->template);
 		$this->template = str_replace('{dol_value_object_ref}', $object->ref, $this->template);
 		//$this->template = str_replace('<dol_value_object_points>', $object->points, $this->template);
@@ -644,15 +644,15 @@ class dolReceiptPrinter extends Printer
 		// print ticket
 		$level = 0;
 		$terminal = $_SESSION["takeposterminal"];
-		
+
 		dol_include_once('/takeposconnector/lib/takeposconnector.lib.php');
 		$nbcharactbyline = (takeposconnectorGetConf('RECEIPT_PRINTER_NB_CHARACT_BY_LINE', $terminal) !== '' ? takeposconnectorGetConf('RECEIPT_PRINTER_NB_CHARACT_BY_LINE', $terminal) : 48);
 		$lineDescMaxLength = (takeposconnectorGetConf('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH', $terminal) !== '' ? takeposconnectorGetConf('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH', $terminal) : 30);
-		
+
 		$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $terminal);
 		$customer = new Societe($db);
 		$customer->fetch($socid);
-		
+
 		$ret = $this->initPrinter($printerid);
 		if ($ret > 0) {
 			setEventMessages($this->error, $this->errors, 'errors');
@@ -673,7 +673,7 @@ class dolReceiptPrinter extends Printer
 						$sql = "UPDATE ".MAIN_DB_PREFIX."facture SET pos_print_counter = pos_print_counter + 1";
 						$sql .= " WHERE rowid = ".((int) $object->id);
 						$db->query($sql);
-						
+
 						$print_counter = $object->pos_print_counter + 1;
 						$isADuplicata = ($print_counter >= 2);
 						if ($object->status == $object::STATUS_CLOSED) {

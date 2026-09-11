@@ -42,7 +42,8 @@ function takeposconnectorAdminPrepareHead()
 	$head[$h][2] = 'scope0';
 	$h++;
 
-	for ($indexTerminal = 1; $indexTerminal <= getDolGlobalInt('TAKEPOS_NUM_TERMINALS'); $indexTerminal++) {
+	$numTerminals = getDolGlobalInt('TAKEPOS_NUM_TERMINALS');
+	for ($indexTerminal = 1; $indexTerminal <= $numTerminals; $indexTerminal++) {
 		$terminalLabel = $langs->trans('Terminal').' '.$indexTerminal;
 		$terminalName = getDolGlobalString('TAKEPOS_TERMINAL_NAME_'.$indexTerminal);
 		if ($terminalName !== '') {

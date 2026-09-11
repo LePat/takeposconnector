@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2004	Andreu Bisquerra	<jove@bisquerra.com>
  * Copyright (C) 2020		Thibault FOUCART	<support@ptibogxiv.net>
- * Copyright (C) 2020 Catriel Rios <catriel_r@hotmail.com> 
+ * Copyright (C) 2020 Catriel Rios <catriel_r@hotmail.com>
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -94,7 +94,6 @@ if ($action == "printinvoiceticket" && $term != '' && $id > 0 && !empty($user->r
 	$conf->global->TAKEPOS_PRINT_METHOD = "takeposconnector"; //CATRIEL para obtener la salida de $printer
 	require_once '../lib/takeposconnector.lib.php';
 	$ret = $printer->sendToPrinter($object, takeposconnectorGetConf('TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES', $term), $conf->global->{'TAKEPOS_PRINTER_TO_USE'.$term});
-
 }
 
 // Pulse the cash drawer (client-side WHB submission of the raw ESC/POS bytes, see
@@ -114,7 +113,6 @@ $placeid = 0; // $placeid is ID of invoice
 
 //CATRIEL
 if ($action == "order") {
-
 	require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 	require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 
@@ -171,18 +169,17 @@ if ($action == "order") {
 			$linestoprint++;
 			$sql = "UPDATE ".MAIN_DB_PREFIX."facturedet set special_code='1' where rowid=".$line->id; //Set to print on printer 1
 			$db->query($sql);
-
 		}
 	}
 	if (($conf->global->TAKEPOS_PRINT_METHOD == "receiptprinter" || $conf->global->TAKEPOS_PRINT_METHOD == "takeposconnector") && $linestoprint > 0) {
 		$invoice->fetch($placeid); //Reload object before send to printer
 		$printer->orderprinter = 1;
-//		echo "<script>";
-//		echo "var orderprinter1esc='";
+		//      echo "<script>";
+		//      echo "var orderprinter1esc='";
 		echo "{\"id\":\"1\",\"data\":\"";
 		$ret = $printer->sendToPrinter($invoice, $conf->global->{'TAKEPOS_TEMPLATE_TO_USE_FOR_ORDERS'.$_SESSION["takeposterminal"]}, $conf->global->{'TAKEPOS_ORDER_PRINTER1_TO_USE'.$_SESSION["takeposterminal"]}); // PRINT TO PRINTER 1
 		echo "\"}";
-//		echo "';</script>";
+		//      echo "';</script>";
 	}
 	$sql = "UPDATE ".MAIN_DB_PREFIX."facturedet set special_code='4' where special_code='1' and fk_facture=".$invoice->id; // Set as printed
 	$db->query($sql);
@@ -206,12 +203,12 @@ if ($action == "order") {
 	if (($conf->global->TAKEPOS_PRINT_METHOD == "receiptprinter" || $conf->global->TAKEPOS_PRINT_METHOD == "takeposconnector") && $linestoprint > 0) {
 		$invoice->fetch($placeid); //Reload object before send to printer
 		$printer->orderprinter = 2;
-//		echo "<script>";
-//		echo "var orderprinter2esc='";
+		//      echo "<script>";
+		//      echo "var orderprinter2esc='";
 		echo "{\"id\":\"2\",\"data\":\"";
 		$ret = $printer->sendToPrinter($invoice, $conf->global->{'TAKEPOS_TEMPLATE_TO_USE_FOR_ORDERS'.$_SESSION["takeposterminal"]}, $conf->global->{'TAKEPOS_ORDER_PRINTER2_TO_USE'.$_SESSION["takeposterminal"]}); // PRINT TO PRINTER 2
 		echo "\"}";
-//		echo "';</script>";
+		//      echo "';</script>";
 	}
 	$sql = "UPDATE ".MAIN_DB_PREFIX."facturedet set special_code='4' where special_code='2' and fk_facture=".$invoice->id; // Set as printed
 	$db->query($sql);
@@ -235,20 +232,16 @@ if ($action == "order") {
 	if (($conf->global->TAKEPOS_PRINT_METHOD == "receiptprinter" || $conf->global->TAKEPOS_PRINT_METHOD == "takeposconnector") && $linestoprint > 0) {
 		$invoice->fetch($placeid); //Reload object before send to printer
 		$printer->orderprinter = 3;
-//		echo "<script>";
-//		echo "var orderprinter3esc='";
+		//      echo "<script>";
+		//      echo "var orderprinter3esc='";
 		echo "{\"id\":\"3\",\"data\":\"";
 		$ret = $printer->sendToPrinter($invoice, $conf->global->{'TAKEPOS_TEMPLATE_TO_USE_FOR_ORDERS'.$_SESSION["takeposterminal"]}, $conf->global->{'TAKEPOS_ORDER_PRINTER3_TO_USE'.$_SESSION["takeposterminal"]}); // PRINT TO PRINTER 3
 
 		echo "\"}";
-//		echo "';</script>";
+		//      echo "';</script>";
 	}
 
 	echo "]";  //end JSON
 	$sql = "UPDATE ".MAIN_DB_PREFIX."facturedet set special_code='4' where special_code='3' and fk_facture=".$invoice->id; // Set as printed
 	$db->query($sql);
-
 }
-
-
-

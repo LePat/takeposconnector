@@ -270,7 +270,7 @@ class modTakeposConnector extends DolibarrModules
 		$this->rights = array();
 		$r = 0;
 		// Add here entries to declare new permissions
-		
+
 
 		// Main menu entries to add
 		$this->menu = array();

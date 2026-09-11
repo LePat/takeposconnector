@@ -113,7 +113,7 @@ if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse) == 'oui') {
 	$ws = 'wss://';
 }
 
-// Appareils configurés pour ce terminal — détermine les indicateurs d'état affichés dans le topnav.
+// Devices configured for this terminal — drives the status indicators shown in the topnav.
 $tpcScaleUrl   = takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse);
 $tpcDisplayUrl = takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $terminaltouse);
 $tpcHasScale   = !empty($tpcScaleUrl);
@@ -265,56 +265,56 @@ window.addEventListener('pagehide', tpcFermerTousLesAppareils);
 // ===============================================
 
 function WebSocketSerial(options) {
-    var defaults = {
-        url: 'ws://localhost:12212/serial/DISPLAY',
-        cle: 'display',
-        onConnect: function () {
-        },
-        onDisconnect: function () {
-        },
-        onMessage: function (message) {
-        }
-    };
+	var defaults = {
+		url: 'ws://localhost:12212/serial/DISPLAY',
+		cle: 'display',
+		onConnect: function () {
+		},
+		onDisconnect: function () {
+		},
+		onMessage: function (message) {
+		}
+	};
 
-    var settings = Object.assign({}, defaults, options);
-    var websocket;
-    var buffer = '';
+	var settings = Object.assign({}, defaults, options);
+	var websocket;
+	var buffer = '';
 
-    var onMessage = function (evt) {
-        var chr = evt.data;
-        settings.onMessage(chr);
-    };
+	var onMessage = function (evt) {
+		var chr = evt.data;
+		settings.onMessage(chr);
+	};
 
-    var userOnOpen = null;
+	var userOnOpen = null;
 
-    var onConnect = function () {
-        tpcMajEtat(settings.cle, 'ouvert');
-        settings.onConnect();
-        if (typeof userOnOpen === 'function') {
-            userOnOpen();
-        }
-    };
+	var onConnect = function () {
+		tpcMajEtat(settings.cle, 'ouvert');
+		settings.onConnect();
+		if (typeof userOnOpen === 'function') {
+			userOnOpen();
+		}
+	};
 
-    var onDisconnect = function (evt) {
-        tpcMajEtat(settings.cle, 'ferme');
-        settings.onDisconnect();
-        // Fermeture propre par le WHB car le périphérique est absent (code 4001) : on sonde
-        // à cadence de base sans escalade du back-off, pour repasser au vert ~1 s après le
-        // rebranchage. Les fermetures anormales (WHB injoignable) gardent le back-off.
-        if (evt && evt.code === 4001) {
-            tpcTentatives[settings.cle] = 0;
-        }
-        tpcReconnecterAvecDelai(settings.cle, connect);
-    };
+	var onDisconnect = function (evt) {
+		tpcMajEtat(settings.cle, 'ferme');
+		settings.onDisconnect();
+		// Fermeture propre par le WHB car le périphérique est absent (code 4001) : on sonde
+		// à cadence de base sans escalade du back-off, pour repasser au vert ~1 s après le
+		// rebranchage. Les fermetures anormales (WHB injoignable) gardent le back-off.
+		if (evt && evt.code === 4001) {
+			tpcTentatives[settings.cle] = 0;
+		}
+		tpcReconnecterAvecDelai(settings.cle, connect);
+	};
 
-    var connect = function () {
-        tpcMajEtat(settings.cle, 'connexion');
-        websocket = new WebSocket(settings.url);
-        websocket.onopen = onConnect;
-        websocket.onclose = onDisconnect;
-        websocket.onmessage = onMessage;
-        websocket.onerror = function (evt) { console.log('WebSocket error (' + settings.cle + '): ', evt); };
-    };
+	var connect = function () {
+		tpcMajEtat(settings.cle, 'connexion');
+		websocket = new WebSocket(settings.url);
+		websocket.onopen = onConnect;
+		websocket.onclose = onDisconnect;
+		websocket.onmessage = onMessage;
+		websocket.onerror = function (evt) { console.log('WebSocket error (' + settings.cle + '): ', evt); };
+	};
 
 	this.readyState = function () {
 		return websocket ? websocket.readyState : WebSocket.CLOSED;
@@ -330,21 +330,21 @@ function WebSocketSerial(options) {
 		}
 	};
 
-    this.send = function (message) {
-        websocket.send(message);
-    };
+	this.send = function (message) {
+		websocket.send(message);
+	};
 
-    this.reconnecterMaintenant = function () {
-        tpcFermerProprement(websocket);
-        connect();
-    };
+	this.reconnecterMaintenant = function () {
+		tpcFermerProprement(websocket);
+		connect();
+	};
 
-    // Ferme le socket sans relance auto (déchargement de page).
-    this.fermer = function () {
-        tpcFermerProprement(websocket);
-    };
+	// Ferme le socket sans relance auto (déchargement de page).
+	this.fermer = function () {
+		tpcFermerProprement(websocket);
+	};
 
-    connect();
+	connect();
 }
 
 // Make it available — uniquement si un afficheur est configuré pour ce terminal.
@@ -364,36 +364,35 @@ tpcAppareils['display'] = webSocketCustomerDisplay;
 // ===============================================
 
 function WebSocketWeigh(options) {
-    var defaults = {
-        url: 'ws://localhost:12212/serial/WEIGH',
-        cle: 'scale',
-        weightRegex: new RegExp('([0-9]{1,2}\\.[0-9]{3})kg'),
-        stableRegex: new RegExp('^ST.*\\s+'),
-        onConnect: function () {
-        },
-        onDisconnect: function () {
-        },
-        onUpdate: function (weight, stable) {
-        }
-    };
+	var defaults = {
+		url: 'ws://localhost:12212/serial/WEIGH',
+		cle: 'scale',
+		weightRegex: new RegExp('([0-9]{1,2}\\.[0-9]{3})kg'),
+		stableRegex: new RegExp('^ST.*\\s+'),
+		onConnect: function () {
+		},
+		onDisconnect: function () {
+		},
+		onUpdate: function (weight, stable) {
+		}
+	};
 
-    var settings = Object.assign({}, defaults, options);
-    var websocket;
-    var buffer = '';
-    
-    var onError = function(evt) {
-    	// Ne PAS reconnecter ici : un onerror est toujours suivi d'un onclose qui
-    	// se charge de la reconnexion. Reconnecter aux deux endroits empilait les
-    	// sockets (croissance exponentielle d'instances orphelines) à chaque coupure.
-    	console.log("Error (scale): ", evt);
-    }
+	var settings = Object.assign({}, defaults, options);
+	var websocket;
+	var buffer = '';
+	
+	var onError = function(evt) {
+		// Ne PAS reconnecter ici : un onerror est toujours suivi d'un onclose qui
+		// se charge de la reconnexion. Reconnecter aux deux endroits empilait les
+		// sockets (croissance exponentielle d'instances orphelines) à chaque coupure.
+		console.log("Error (scale): ", evt);
+	}
 
-    var onMessage = function (evt) {
-        var chr = evt.data;
+	var onMessage = function (evt) {
+		var chr = evt.data;
 		console.log("data: " + chr);
 
 		<?php if (takeposconnectorGetConf('WEIGHINGSCALE_PROTOCOL', $terminaltouse) == "diag06") { ?>
-
 			var response = CheckoutDialog06.identifyMessage(evt.data);
 			if (response.type == 'ACK' && currentStateClient == ClientStates.SENDING_UNITPRICE_BEFORE_WEIGHING) {
 				currentStateClient = ClientStates.ACK_RECEIVED_FOR_UNITPRICE;
@@ -430,74 +429,73 @@ function WebSocketWeigh(options) {
 			}
 
 		<?php } else { ?>
-			
-        if (chr == "\n") {
-            var weightOutput = settings.weightRegex.exec(buffer);
-            var stableOutput = settings.stableRegex.test(buffer);
+		if (chr == "\n") {
+			var weightOutput = settings.weightRegex.exec(buffer);
+			var stableOutput = settings.stableRegex.test(buffer);
 
-            if (weightOutput != null) {
-                settings.onUpdate(weightOutput[1], stableOutput);
-            } else {
+			if (weightOutput != null) {
+				settings.onUpdate(weightOutput[1], stableOutput);
+			} else {
 				console.log("buffer: " + buffer);
 			}
-            buffer = '';
-        } else {
-            buffer = buffer + chr;
-        }
+			buffer = '';
+		} else {
+			buffer = buffer + chr;
+		}
 		console.log("buffer: " + buffer);
 		
 		<?php } ?>
-    };
+	};
 
-    var onConnect = function () {
-        tpcMajEtat(settings.cle, 'ouvert');
-        settings.onConnect();
-    };
+	var onConnect = function () {
+		tpcMajEtat(settings.cle, 'ouvert');
+		settings.onConnect();
+	};
 
-    var onDisconnect = function (evt) {
-        tpcMajEtat(settings.cle, 'ferme');
-        settings.onDisconnect();
-        // Fermeture propre par le WHB car le périphérique est absent (code 4001) : on sonde
-        // à cadence de base sans escalade du back-off, pour repasser au vert ~1 s après le
-        // rebranchage. Les fermetures anormales (WHB injoignable) gardent le back-off.
-        if (evt && evt.code === 4001) {
-            tpcTentatives[settings.cle] = 0;
-        }
-        tpcReconnecterAvecDelai(settings.cle, connect);
-    };
+	var onDisconnect = function (evt) {
+		tpcMajEtat(settings.cle, 'ferme');
+		settings.onDisconnect();
+		// Fermeture propre par le WHB car le périphérique est absent (code 4001) : on sonde
+		// à cadence de base sans escalade du back-off, pour repasser au vert ~1 s après le
+		// rebranchage. Les fermetures anormales (WHB injoignable) gardent le back-off.
+		if (evt && evt.code === 4001) {
+			tpcTentatives[settings.cle] = 0;
+		}
+		tpcReconnecterAvecDelai(settings.cle, connect);
+	};
 
-    var connect = function () {
-        tpcMajEtat(settings.cle, 'connexion');
-        websocket = new WebSocket(settings.url);
-        websocket.onopen = onConnect;
-        websocket.onclose = onDisconnect;
-        websocket.onmessage = onMessage;
-        websocket.onerror = onError;
-    };
+	var connect = function () {
+		tpcMajEtat(settings.cle, 'connexion');
+		websocket = new WebSocket(settings.url);
+		websocket.onopen = onConnect;
+		websocket.onclose = onDisconnect;
+		websocket.onmessage = onMessage;
+		websocket.onerror = onError;
+	};
 
-    // On expose le wrapper (et non le socket natif) pour que la référence
-    // `webSocketWeight` reste valable après une reconnexion : auparavant elle
-    // pointait sur le socket mort après la première coupure et la pesée ne
-    // repartait plus (readyState restait CLOSED).
-    this.readyState = function () {
-        return websocket ? websocket.readyState : WebSocket.CLOSED;
-    };
+	// On expose le wrapper (et non le socket natif) pour que la référence
+	// `webSocketWeight` reste valable après une reconnexion : auparavant elle
+	// pointait sur le socket mort après la première coupure et la pesée ne
+	// repartait plus (readyState restait CLOSED).
+	this.readyState = function () {
+		return websocket ? websocket.readyState : WebSocket.CLOSED;
+	};
 
-    this.send = function (message) {
-        websocket.send(message);
-    };
+	this.send = function (message) {
+		websocket.send(message);
+	};
 
-    this.reconnecterMaintenant = function () {
-        tpcFermerProprement(websocket);
-        connect();
-    };
+	this.reconnecterMaintenant = function () {
+		tpcFermerProprement(websocket);
+		connect();
+	};
 
-    // Ferme le socket sans relance auto (déchargement de page).
-    this.fermer = function () {
-        tpcFermerProprement(websocket);
-    };
+	// Ferme le socket sans relance auto (déchargement de page).
+	this.fermer = function () {
+		tpcFermerProprement(websocket);
+	};
 
-    connect();
+	connect();
 }
 
 var globalWeight = null;
@@ -510,16 +508,15 @@ var webSocketWeight;
 webSocketWeight = new WebSocketWeigh({
 	cle: 'scale',
 	url: '<?php echo takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse); ?>',
-    onUpdate: function (weight, stable) {
-    	globalWeight = weight;
-        console.log("onUpdate: " + weight + " is stable: " + stable);
-    },
+	onUpdate: function (weight, stable) {
+		globalWeight = weight;
+		console.log("onUpdate: " + weight + " is stable: " + stable);
+	},
 });
 tpcAppareils['scale'] = webSocketWeight;
 <?php } ?>
 
 <?php if (takeposconnectorGetConf('WEIGHINGSCALE_PROTOCOL', $terminaltouse) == "diag06") { ?>
-
 /**
  * Etats de l'automate à états finis représentant l'utilisation du protocole diaglog-06 par le client.
  */
@@ -645,9 +642,9 @@ function WebSocketPrinter(options) {
 	
 	this.submitRaw = function (b64) {                                                                                                                                  
 		var bin = atob(b64);                                                                                                                                             
- 		var bytes = new Uint8Array(bin.length);                                                                                                                          
- 		for (var i = 0; i < bin.length; i++) {                                                                                                                           
- 			bytes[i] = bin.charCodeAt(i);                                                                                                                                  
+		 var bytes = new Uint8Array(bin.length);                                                                                                                          
+		 for (var i = 0; i < bin.length; i++) {                                                                                                                           
+			 bytes[i] = bin.charCodeAt(i);                                                                                                                                  
 		}                                                                                                                                                                
 		websocket.send(bytes);                                                                                                                                           
 	};

@@ -99,7 +99,7 @@ if (!class_exists('FormSetup')) {
 $formSetup = new FormSetup($db);
 
 // Select printer to use with terminal
-if(file_exists(DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php')) {
+if (file_exists(DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php')) {
 	require_once DOL_DOCUMENT_ROOT.'/takepos/class/dolreceiptprinter.class.php';
 } else {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/dolreceiptprinter.class.php';
