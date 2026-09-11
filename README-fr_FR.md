@@ -29,6 +29,19 @@ Autres fonctionnalités :
   s'adapter aux imprimantes thermiques étroites (ex. 42 colonnes) plutôt que la largeur par
   défaut de 48 colonnes.
 
+## Compatibilité
+
+**Dolibarr >= 24.0.1 est requis pour la balance et l'afficheur client via le
+Webapp-Hardware-Bridge (WHB).** Le core n'a introduit le routage WHB pour ces deux
+équipements qu'en version 24.0.1 (`TAKEPOS_CONNECTOR_TO_WHB_SCALE` /
+`TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY`). Sur toute version antérieure, TakePOS ne dispose
+d'aucun mécanisme de ce type dans le core — la balance et l'afficheur client font toujours un
+appel HTTP direct vers `TAKEPOS_PRINT_SERVER`, quelle que soit la configuration de ce module,
+sans possibilité d'activer la voie WHB/WebSocket.
+
+L'imprimante thermique et le tiroir-caisse via WHB ne dépendent pas de ce routage et
+fonctionnent aussi sur des versions antérieures de Dolibarr.
+
 ## Prérequis
 
 - le **New TakePOS Connector PHP** pour utiliser le protocole balance "$", l'imprimante

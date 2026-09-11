@@ -19,6 +19,18 @@ Other features:
 ![State panel](img/state_panel.png "Connections' states")
 - **Configurable receipt width** (characters per line), per terminal, to match narrow thermal printers (e.g. 42 columns) instead of the 48-column default.
 
+## Compatibility
+
+**Dolibarr >= 24.0.1 is required for the weighing scale and customer display over the
+Webapp-Hardware-Bridge (WHB).** Core only gained the WHB routing for these two devices in
+24.0.1 (`TAKEPOS_CONNECTOR_TO_WHB_SCALE` / `TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY`). On
+any earlier version, TakePOS core has no such routing at all — the scale and customer display
+always fall back to a plain HTTP call to `TAKEPOS_PRINT_SERVER` regardless of this module's
+configuration, with no way to enable the WHB/WebSocket path.
+
+The thermal printer and cash drawer over WHB do not depend on that core routing and work on
+earlier Dolibarr versions too.
+
 ## Requirements
 
 - new TakePOS Connector PHP to use "$" weighing scale protocol, thermal printer, cash drawer and customer display
