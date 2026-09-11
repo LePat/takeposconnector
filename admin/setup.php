@@ -323,10 +323,7 @@ if ($action == 'edit') {
 		print '<div class="div-table-responsive-no-min">';
 		print '<table class="noborder centpercent">';
 		foreach ($sslParam as $base => $def) {
-			$key = $base.$scopeSuffix;
-			if (isset($formSetup->items[$key])) {
-				print $formSetup->generateLineOutput($formSetup->items[$key], true);
-			}
+			takeposconnectorSetupPrintItem($formSetup, $scope, $base.$scopeSuffix, $base, $def);
 		}
 		print '</table>';
 		print '</div>';
@@ -341,10 +338,7 @@ if ($action == 'edit') {
 			print '<div class="div-table-responsive-no-min">';
 			print '<table class="noborder centpercent">';
 			foreach ($fields as $base => $def) {
-				$key = $base.$scopeSuffix;
-				if (isset($formSetup->items[$key])) {
-					print $formSetup->generateLineOutput($formSetup->items[$key], true);
-				}
+				takeposconnectorSetupPrintItem($formSetup, $scope, $base.$scopeSuffix, $base, $def);
 			}
 			print '</table>';
 			print '</div>';

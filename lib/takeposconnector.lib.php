@@ -141,7 +141,49 @@ function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix
 			$item->setAsNumber();
 		}
 	} else {
-		// Terminal parameters: inherit the common value or define a specific one.
+		// Terminal parameters: inherit the common value or define a specific one. The override
+		// widget itself (checkbox + input) is NOT built here: this function runs before the
+		// Actions section (which saves the POSTed value into $conf->global), so any HTML baked
+		// in now would show the pre-save value. It's resolved instead by
+		// takeposconnectorSetupPrintItem(), called at print time, i.e. after Actions ran.
+		$item = $formSetup->newItem($key);
+		$item->nameText = $langs->trans($base);
+		$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
+	}
+}
+
+/**
+ * Print one setup line, resolving a per-terminal override widget (if any) right before
+ * printing it.
+ *
+ * Deliberately NOT using FormSetupItem::$fieldInputCallBack for this: that property only
+ * exists starting with Dolibarr 24.0 (core commit 758f0a54820) and is silently ignored on
+ * 23.x (no error, the callback is just never invoked) — this module's declared minimum is
+ * 23.0. On 23.x the item then falls through to its default type ('string'), so every
+ * per-terminal field (the protocol select included) rendered as a plain text input instead
+ * of its real widget, and the "specific value" checkbox never appeared at all.
+ *
+ * $item->fieldInputOverride (a plain string property, not a callback) has existed since long
+ * before Dolibarr 23 and is checked by FormSetupItem::generateInputField() on every version.
+ * Setting it here — called from the print loop, so still after the Actions section ran —
+ * gets the same "reflect the just-saved value without a second save" behavior across all
+ * supported versions.
+ *
+ * @param 	FormSetup 	$formSetup 	The setup form
+ * @param 	int 		$scope 		Current scope (0 = common, N = terminal N)
+ * @param 	string 		$key 		Item key, already scope-suffixed
+ * @param 	string 		$base 		Bare constant name
+ * @param 	array 		$def 		Field definition (type/choices/placeholder/...)
+ * @return 	void
+ */
+function takeposconnectorSetupPrintItem($formSetup, $scope, $key, $base, $def)
+{
+	if (!isset($formSetup->items[$key])) {
+		return;
+	}
+	$item = $formSetup->items[$key];
+
+	if ($scope != 0) {
 		$options = array();
 		if (!empty($def['choices'])) {
 			$options['choices'] = $def['choices'];
@@ -149,18 +191,10 @@ function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix
 		if (!empty($def['placeholder'])) {
 			$options['placeholder'] = $def['placeholder'];
 		}
-
-		$item = $formSetup->newItem($key);
-		$item->nameText = $langs->trans($base);
-		// fieldInputCallBack (not fieldInputOverride): this item is built before the Actions
-		// section runs (and saves the POSTed value into $conf->global), but the widget itself
-		// must reflect that just-saved value on this same page's render. fieldInputOverride
-		// would bake in the pre-save value, requiring a second save to show correctly.
-		$item->fieldInputCallBack = function () use ($key, $base, $def, $options) {
-			return takeposconnectorTerminalField($key, $base, $def['type'], $options);
-		};
-		$item->setSaveCallBack('takeposconnectorSaveOverrideItem');
+		$item->fieldInputOverride = takeposconnectorTerminalField($key, $base, $def['type'], $options);
 	}
+
+	print $formSetup->generateLineOutput($item, true);
 }
 
 /**
