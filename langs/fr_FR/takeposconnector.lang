@@ -37,8 +37,12 @@ TakeposconnSectionPrinter = Impression des tickets
 WEIGHINGSCALE_WEBSOCKET_URL = URL du webservice de pesée
 CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance
+TAKEPOS_CONNECTOR_TO_WHB_SCALE = Router la balance via WHB
+TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY = Router l'afficheur client via WHB
 TakeposconnHelpScaleUrl = URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées
 TakeposconnHelpDisplayUrl = URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l'afficheur client
+TakeposconnHelpWhbScale = Nécessite Dolibarr >= 24.0.1. Si désactivé, TakePOS utilise son appel HTTP direct historique vers TAKEPOS_PRINT_SERVER au lieu de la connexion WebSocket de ce module vers WHB - n'activez que si vous utilisez réellement WHB pour la balance.
+TakeposconnHelpWhbDisplay = Nécessite Dolibarr >= 24.0.1. Si désactivé, TakePOS utilise son appel HTTP direct historique vers TAKEPOS_PRINT_SERVER au lieu de la connexion WebSocket de ce module vers WHB - n'activez que si vous utilisez réellement WHB pour l'afficheur client.
 
 Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Utiliser SSL ?

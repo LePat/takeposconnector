@@ -22,34 +22,6 @@
  */
 
 /**
- * Ensure the two core constants that make TakePOS (core >= 24.0.1) route the weighing scale
- * and customer display through WHB over WebSocket are set to 1 — without them, core silently
- * falls back to its legacy plain-HTTP TAKEPOS_PRINT_SERVER endpoints (see
- * htdocs/takepos/index.php's WeighingScale(), pay.php/invoice.php customer-display push),
- * which this module's WHB-based protocol never uses.
- *
- * This module's own $this->const (core/modules/modTakeposConnector.class.php) already sets
- * these on a *fresh* activation, but init() doesn't rerun when the module's code is upgraded
- * in place — so an already-active install (the common case once this module is deployed)
- * would otherwise never pick up this default. Called from admin/setup.php on every load
- * instead: idempotent (only writes when a value is actually missing/wrong), so it's a no-op
- * on every subsequent page load once set.
- *
- * @return 	void
- */
-function takeposconnectorEnsureWhbRouting()
-{
-	global $db, $conf;
-
-	$constants = array('TAKEPOS_CONNECTOR_TO_WHB_SCALE', 'TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY');
-	foreach ($constants as $constName) {
-		if (getDolGlobalString($constName) !== '1') {
-			dolibarr_set_const($db, $constName, '1', 'chaine', 0, '', $conf->entity);
-		}
-	}
-}
-
-/**
  * Prepare admin pages header: one tab for the common parameters, one per configured
  * terminal (both pointing to setup.php with a different ?scope=N), then About. Same head
  * array whichever page calls it (setup.php or about.php) — only the active tab differs.
@@ -135,16 +107,25 @@ function takeposconnectorGetConf($name, $terminal = 0)
  * or specific value) on a "Terminal N" tab. Used by admin/setup.php for both the standalone
  * SSL field and every field of every device section.
  *
+ * A field marked `'globalonly' => 1` in $def (e.g. the WHB-routing checkboxes, read by core
+ * as bare global constants with no per-terminal suffix support) is only ever built on the
+ * "Commun" tab: no per-terminal override item is created for it, so it simply doesn't appear
+ * on a Terminal N tab (nothing to print — see takeposconnectorSetupPrintItem()'s isset check).
+ *
  * @param 	FormSetup 	$formSetup 		The setup form
  * @param 	Translate 	$langs 			Translations
  * @param 	int 		$scope 			Current scope (0 = common, N = terminal N)
  * @param 	string 		$scopeSuffix 	'' for scope 0, else (string) $scope
  * @param 	string 		$base 			Bare constant name
- * @param 	array 		$def 			Field definition (type/placeholder/css/mandatory/help/choices)
+ * @param 	array 		$def 			Field definition (type/placeholder/css/mandatory/help/choices/globalonly)
  * @return 	void
  */
 function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix, $base, $def)
 {
+	if ($scope != 0 && !empty($def['globalonly'])) {
+		return;
+	}
+
 	$key = $base.$scopeSuffix;
 
 	if ($scope == 0) {
@@ -167,6 +148,8 @@ function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix
 			$item->setAsSelect($def['choices']);
 		} elseif ($def['type'] == 'number') {
 			$item->setAsNumber();
+		} elseif ($def['type'] == 'yesno') {
+			$item->setAsYesNo();
 		}
 	} else {
 		// Terminal parameters: inherit the common value or define a specific one. The override
@@ -185,11 +168,11 @@ function takeposconnectorSetupBuildItem($formSetup, $langs, $scope, $scopeSuffix
  * printing it.
  *
  * Deliberately NOT using FormSetupItem::$fieldInputCallBack for this: that property only
- * exists starting with Dolibarr 24.0 (core commit 758f0a54820) and is silently ignored on
- * 23.x (no error, the callback is just never invoked) — this module's declared minimum is
- * 23.0. On 23.x the item then falls through to its default type ('string'), so every
- * per-terminal field (the protocol select included) rendered as a plain text input instead
- * of its real widget, and the "specific value" checkbox never appeared at all.
+ * exists starting with Dolibarr 24.0 (core commit 758f0a54820) and was silently ignored on
+ * older versions the module used to declare as its minimum (no error, the callback is just
+ * never invoked) — on those the item then fell through to its default type ('string'), so
+ * every per-terminal field (the protocol select included) rendered as a plain text input
+ * instead of its real widget, and the "specific value" checkbox never appeared at all.
  *
  * $item->fieldInputOverride (a plain string property, not a callback) has existed since long
  * before Dolibarr 23 and is checked by FormSetupItem::generateInputField() on every version.

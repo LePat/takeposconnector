@@ -90,11 +90,6 @@ if (!$user->admin) {
 	accessforbidden();
 }
 
-// Make sure core (>= 24.0.1) actually routes the scale/customer display through WHB. See
-// takeposconnectorEnsureWhbRouting()'s docblock for why this can't rely solely on
-// $this->const at module activation.
-takeposconnectorEnsureWhbRouting();
-
 // Set this to 1 to use the factory to manage constants. Warning, the generated module will be compatible with version v15+ only
 $useFormSetup = 1;
 
@@ -139,11 +134,18 @@ $sslParam = array(
 // style). 'type' drives both the common widget and the per-terminal override widget.
 $paramSections = array(
 	'TakeposconnSectionScale' => array(
-		'WEIGHINGSCALE_WEBSOCKET_URL' => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpScaleUrl'),
-		'WEIGHINGSCALE_PROTOCOL'      => array('type' => 'select', 'choices' => $TField),
+		// Core (>= 24.0.1) only routes the scale through WHB over WebSocket when this bare
+		// global constant is set — otherwise it always falls back to a plain HTTP call to
+		// TAKEPOS_PRINT_SERVER, regardless of the WebSocket URL below. Global-only on purpose:
+		// core reads it without any per-terminal suffix, so it can't be overridden per terminal.
+		'TAKEPOS_CONNECTOR_TO_WHB_SCALE' => array('type' => 'yesno', 'globalonly' => 1, 'help' => 'TakeposconnHelpWhbScale'),
+		'WEIGHINGSCALE_WEBSOCKET_URL'    => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpScaleUrl'),
+		'WEIGHINGSCALE_PROTOCOL'         => array('type' => 'select', 'choices' => $TField),
 	),
 	'TakeposconnSectionDisplay' => array(
-		'CUSTOMERDISPLAY_WEBSOCKET_URL' => array('type' => 'text', 'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpDisplayUrl'),
+		// Same as TAKEPOS_CONNECTOR_TO_WHB_SCALE above, for the customer display.
+		'TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY' => array('type' => 'yesno', 'globalonly' => 1, 'help' => 'TakeposconnHelpWhbDisplay'),
+		'CUSTOMERDISPLAY_WEBSOCKET_URL'             => array('type' => 'text', 'placeholder' => 'ws://localhost:12212/serial/DISPLAY', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpDisplayUrl'),
 	),
 	'TakeposconnSectionPrinter' => array(
 		'DIRECTPRINTWHB_IPADDRESS'             => array('type' => 'text',   'placeholder' => 'localhost'),
