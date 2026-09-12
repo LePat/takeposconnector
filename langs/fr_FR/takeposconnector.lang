@@ -39,10 +39,13 @@ CUSTOMERDISPLAY_WEBSOCKET_URL = URL du webservice de l'afficheur client
 WEIGHINGSCALE_PROTOCOL = Protocole de communication avec la balance
 TAKEPOS_CONNECTOR_TO_WHB_SCALE = Router la balance via WHB
 TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY = Router l'afficheur client via WHB
+PRODUCT_USE_UNITS = Activer les unités de produit
 TakeposconnHelpScaleUrl = URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour effectuer les pesées
 TakeposconnHelpDisplayUrl = URL du WebSocket configuré sur le Webapp-Hardware-Bridge pour l'afficheur client
 TakeposconnHelpWhbScale = Nécessite Dolibarr >= 24.0.1. Si désactivé, TakePOS utilise son appel HTTP direct historique vers TAKEPOS_PRINT_SERVER au lieu de la connexion WebSocket de ce module vers WHB - n'activez que si vous utilisez réellement WHB pour la balance.
 TakeposconnHelpWhbDisplay = Nécessite Dolibarr >= 24.0.1. Si désactivé, TakePOS utilise son appel HTTP direct historique vers TAKEPOS_PRINT_SERVER au lieu de la connexion WebSocket de ce module vers WHB - n'activez que si vous utilisez réellement WHB pour l'afficheur client.
+TakeposconnHelpProductUseUnits = Nécessaire pour la pesée : sans ça, aucun produit ne peut se voir attribuer d'unité (ex. KG), donc TakePOS n'a jamais de raison de demander une pesée. Masqué par le core sur la page de configuration du module Produits - activé ici à la place.
+TakeposconnHelpMultiprices = Le core de TakePOS demande toujours le prix unitaire à la balance au niveau de prix client n°1 (fonctionnalité Dolibarr "Produits à prix multiples" / Multiprix, PRODUIT_MULTIPRICES), quel que soit le niveau de prix réel du client en caisse - c'est une limite du core, pas quelque chose que ce module peut contourner. Activez Multiprix (Accueil - Configuration - Modules - Produits & Services) et assurez-vous que le client générique TakePOS utilisé par ce terminal (CASHDESK_ID_THIRDPARTY) est bien réglé au niveau de prix n°1, sinon la balance reçoit le mauvais prix unitaire - ou aucun si Multiprix est désactivé.
 
 Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Utiliser SSL ?

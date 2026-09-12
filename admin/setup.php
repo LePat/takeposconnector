@@ -139,6 +139,12 @@ $paramSections = array(
 		// TAKEPOS_PRINT_SERVER, regardless of the WebSocket URL below. Global-only on purpose:
 		// core reads it without any per-terminal suffix, so it can't be overridden per terminal.
 		'TAKEPOS_CONNECTOR_TO_WHB_SCALE' => array('type' => 'yesno', 'globalonly' => 1, 'help' => 'TakeposconnHelpWhbScale'),
+		// Core hides this constant from the Products module's own admin page ("kept as hidden
+		// feature", htdocs/product/admin/product.php) even though it's what makes the "unit"
+		// selector appear at all on the product card (htdocs/product/card.php). Without it, no
+		// product can ever be given fk_unit=2 (KG), so TakePOS never has a reason to ask for a
+		// weighing in the first place — exposed here since core doesn't surface it anywhere.
+		'PRODUCT_USE_UNITS' => array('type' => 'yesno', 'globalonly' => 1, 'help' => 'TakeposconnHelpProductUseUnits'),
 		'WEIGHINGSCALE_WEBSOCKET_URL'    => array('type' => 'text',   'placeholder' => 'ws://localhost:12212/serial/WEIGH', 'css' => 'minwidth500', 'mandatory' => 1, 'help' => 'TakeposconnHelpScaleUrl'),
 		'WEIGHINGSCALE_PROTOCOL'         => array('type' => 'select', 'choices' => $TField),
 	),
@@ -342,6 +348,16 @@ if ($action == 'edit') {
 			}
 			$firstSection = false;
 			print load_fiche_titre($langs->trans($sectionLabelKey), '', '');
+			if ($sectionLabelKey == 'TakeposconnSectionScale' && $scope == 0) {
+				// Core (htdocs/takepos/index.php, WeighingScale(), diag06 branch) hardcodes price
+				// level 1 when asking the scale for the unit price — it never falls back to the
+				// product's base price_ttc, and never looks at the actual customer's price level.
+				// Not fixable from this module (this is core JS, no hook point) — the workaround
+				// until the core PR lands is to make sure whichever price level actually gets read
+				// is level 1, by keeping the TakePOS terminal's generic customer (CASHDESK_ID_THIRDPARTY)
+				// at price level 1.
+				print info_admin($langs->trans('TakeposconnHelpMultiprices'), 0, 0, 'warning');
+			}
 			print '<div class="div-table-responsive-no-min">';
 			print '<table class="noborder centpercent">';
 			foreach ($fields as $base => $def) {

@@ -39,10 +39,13 @@ CUSTOMERDISPLAY_WEBSOCKET_URL = Customer display WebSocket URL
 WEIGHINGSCALE_PROTOCOL = Scale communication protocol
 TAKEPOS_CONNECTOR_TO_WHB_SCALE = Route the scale through WHB
 TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY = Route the customer display through WHB
+PRODUCT_USE_UNITS = Enable product units
 TakeposconnHelpScaleUrl = WebSocket URL configured on the Webapp-Hardware-Bridge to perform weighings
 TakeposconnHelpDisplayUrl = WebSocket URL configured on the Webapp-Hardware-Bridge for the customer display
 TakeposconnHelpWhbScale = Requires Dolibarr >= 24.0.1. When disabled, TakePOS uses its legacy direct HTTP call to TAKEPOS_PRINT_SERVER instead of this module's WebSocket connection to WHB - enable this only if you actually run WHB for the scale.
 TakeposconnHelpWhbDisplay = Requires Dolibarr >= 24.0.1. When disabled, TakePOS uses its legacy direct HTTP call to TAKEPOS_PRINT_SERVER instead of this module's WebSocket connection to WHB - enable this only if you actually run WHB for the customer display.
+TakeposconnHelpProductUseUnits = Required for weighing: without it, no product can ever be assigned a unit (e.g. KG), so TakePOS never has a reason to ask for a weighing. Hidden by core from the Products module's own setup page - enabled here instead.
+TakeposconnHelpMultiprices = TakePOS core always asks the scale for the unit price at customer price level 1 (Dolibarr's "Products with several prices" / Multiprix feature, PRODUIT_MULTIPRICES), whatever the price level of the actual customer at the till - this is a core limitation, not something this module can work around. Enable Multiprix (Home - Setup - Modules - Products & Services) and make sure the generic TakePOS customer used by this terminal (CASHDESK_ID_THIRDPARTY) is set to price level 1, otherwise the scale receives the wrong unit price - or none at all if Multiprix is disabled entirely.
 
 Terminal = Terminal
 DIRECTPRINTWHB_SECURE = Use SSL ?
