@@ -24,7 +24,7 @@ Autres fonctionnalités :
   sur chaque caisse.
 - **Indicateurs d'état des connexions matériel** dans la barre supérieure de TakePOS (balance,
   afficheur client, imprimante, tiroir-caisse), avec reconnexion WebSocket automatique.
-  ![Panneau d'état](img/state_panel.png "États des connexions")
+  ![Panneau d'état](img/state_panel-fr_FR.png "États des connexions")
 - **Largeur de ticket configurable** (nombre de caractères par ligne), par terminal, pour
   s'adapter aux imprimantes thermiques étroites (ex. 42 colonnes) plutôt que la largeur par
   défaut de 48 colonnes.
@@ -113,7 +113,7 @@ ou non. Si elle ne l'est pas, elle sera complétée ainsi :
 
 #### Capture d'écran de la configuration du module TakePOSConnector
 
-![Capture d'écran takeposconnector](img/setup.png "TakeposConnector")
+![Capture d'écran takeposconnector](img/setup-fr_FR.png "TakeposConnector")
 
 > Note : cette capture d'écran est antérieure à la page de configuration à onglets par
 > terminal et doit être mise à jour.

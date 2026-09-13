@@ -25,7 +25,7 @@ Altre funzionalità:
 - **Indicatori di stato delle connessioni hardware** nella barra superiore di TakePOS
   (bilancia, esposizione del cliente, stampante, cassetto portavaluta), con riconnessione
   automatica del WebSocket.
-![Pannello di stato](img/state_panel.png "Stato delle connessioni")
+![Pannello di stato](img/state_panel-it_IT.png "Stato delle connessioni")
 - **Larghezza dello scontrino configurabile** (numero di caratteri per riga), per terminale,
   per adattarsi a stampanti termiche strette (ad es. 42 colonne) invece della larghezza
   predefinita di 48 colonne.
@@ -116,7 +116,7 @@ questo caso viene gestita solo la stampante.
 
 #### Screenshot della configurazione del modulo TakePOSConnector
 
-![Screenshot takeposconnector](img/setup.png "TakeposConnector")
+![Screenshot takeposconnector](img/setup-it_IT.png "TakeposConnector")
 
 > Nota: questo screenshot è precedente alla pagina di configurazione a schede per terminale e
 > deve essere aggiornato.

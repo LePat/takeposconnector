@@ -25,7 +25,7 @@ Otras funcionalidades:
 - **Indicadores de estado de las conexiones de hardware** en la barra superior de TakePOS
   (balanza, pantalla del cliente, impresora, cajón portamonedas), con reconexión automática
   del WebSocket.
-![Panel de estado](img/state_panel.png "Estado de las conexiones")
+![Panel de estado](img/state_panel-es_ES.png "Estado de las conexiones")
 - **Ancho de ticket configurable** (número de caracteres por línea), por terminal, para
   adaptarse a impresoras térmicas estrechas (por ejemplo, 42 columnas) en lugar del valor por
   defecto de 48 columnas.
@@ -113,7 +113,7 @@ se gestiona la impresora.
 
 #### Captura de pantalla de la configuración del módulo TakePOSConnector
 
-![Captura de pantalla takeposconnector](img/setup.png "TakeposConnector")
+![Captura de pantalla takeposconnector](img/setup-es_ES.png "TakeposConnector")
 
 > Nota: esta captura de pantalla es anterior a la página de configuración con pestañas por
 > terminal y debe actualizarse.

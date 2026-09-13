@@ -23,7 +23,7 @@ Weitere Funktionen:
   Einrichtungsseite mit Reitern, ohne dieselben Einstellungen an jeder Kasse zu wiederholen.
 - **Statusanzeigen der Hardwareverbindungen** in der oberen Leiste von TakePOS (Waage,
   Kundendisplay, Drucker, Kassenschublade), mit automatischer WebSocket-Wiederverbindung.
-![Statusanzeige](img/state_panel.png "Verbindungsstatus")
+![Statusanzeige](img/state_panel-de_DE.png "Verbindungsstatus")
 - **Konfigurierbare Bonbreite** (Zeichen pro Zeile), pro Terminal, um schmale Thermodrucker
   (z. B. 42 Spalten) statt der Standardbreite von 48 Spalten zu unterstützen.
 
@@ -113,7 +113,7 @@ vollständig ist. Ist sie es nicht, wird sie wie folgt vervollständigt:
 
 #### Screenshot der Konfiguration des Moduls TakePOSConnector
 
-![Screenshot takeposconnector](img/setup.png "TakeposConnector")
+![Screenshot takeposconnector](img/setup-de_DE.png "TakeposConnector")
 
 > Hinweis: Dieser Screenshot stammt aus der Zeit vor der Einrichtungsseite mit Reitern pro
 > Terminal und muss aktualisiert werden.
