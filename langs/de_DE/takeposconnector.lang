@@ -1,0 +1,67 @@
+# Copyright (C) 2022 SuperAdmin
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleTakeposConnectorName'
+ModuleTakeposConnectorName = Takepos Connector
+# Module description 'ModuleTakeposConnectorDesc'
+ModuleTakeposConnectorDesc = Hardware-Anbindung für TakePOS
+
+TemporaryReceipt = Vorläufiger Beleg
+number = Nr.
+TotalTTCCourt = Brutto
+UnitPriceShort = EP
+
+TakeposconnCommonParameters = Allgemeine Parameter
+TakeposconnSpecificValue = Spezifischer Wert
+TakeposconnRequiresWHB = TakePOS Connector benötigt den installierten und laufenden Dienst Webapp-Hardware-Bridge (WHB), um mit Waage, Drucker, Kundendisplay und Kassenschublade zu kommunizieren.
+TakeposconnDownloadWHB = Den Hardware-Zugriffsdienst Webapp-Hardware-Bridge herunterladen
+TakeposconnSectionScale = Waage
+TakeposconnSectionDisplay = Kundendisplay
+TakeposconnSectionPrinter = Bondruck
+WEIGHINGSCALE_WEBSOCKET_URL = WebSocket-URL der Waage
+CUSTOMERDISPLAY_WEBSOCKET_URL = WebSocket-URL des Kundendisplays
+WEIGHINGSCALE_PROTOCOL = Kommunikationsprotokoll der Waage
+TAKEPOS_CONNECTOR_TO_WHB_SCALE = Waage über WHB routen
+TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY = Kundendisplay über WHB routen
+PRODUCT_USE_UNITS = Produkteinheiten aktivieren
+TakeposconnHelpScaleUrl = Auf dem Webapp-Hardware-Bridge konfigurierte WebSocket-URL für die Durchführung von Wägungen
+TakeposconnHelpDisplayUrl = Auf dem Webapp-Hardware-Bridge konfigurierte WebSocket-URL für das Kundendisplay
+TakeposconnHelpWhbScale = Erfordert Dolibarr >= 24.0.1. Wenn deaktiviert, verwendet TakePOS seinen historischen direkten HTTP-Aufruf an TAKEPOS_PRINT_SERVER anstelle der WebSocket-Verbindung dieses Moduls zu WHB - nur aktivieren, wenn WHB tatsächlich für die Waage verwendet wird.
+TakeposconnHelpWhbDisplay = Erfordert Dolibarr >= 24.0.1. Wenn deaktiviert, verwendet TakePOS seinen historischen direkten HTTP-Aufruf an TAKEPOS_PRINT_SERVER anstelle der WebSocket-Verbindung dieses Moduls zu WHB - nur aktivieren, wenn WHB tatsächlich für das Kundendisplay verwendet wird.
+TakeposconnHelpProductUseUnits = Erforderlich für die Wägung: ohne diese Option kann keinem Produkt jemals eine Einheit (z. B. KG) zugewiesen werden, sodass TakePOS nie einen Grund hat, eine Wägung anzufordern. Vom Core auf der Einrichtungsseite des Moduls Produkte ausgeblendet - stattdessen hier aktiviert.
+TakeposconnHelpMultiprices = Der TakePOS-Core fragt die Waage immer nach dem Einzelpreis auf Kundenpreisstufe 1 ab (Dolibarr-Funktion "Produkte mit mehreren Preisen" / Multiprix, PRODUIT_MULTIPRICES), unabhängig von der tatsächlichen Preisstufe des Kunden an der Kasse - dies ist eine Einschränkung des Cores, die dieses Modul nicht umgehen kann. Aktivieren Sie Multiprix (Start - Konfiguration - Module - Produkte & Dienstleistungen) und stellen Sie sicher, dass der generische TakePOS-Kunde dieses Terminals (CASHDESK_ID_THIRDPARTY) auf Preisstufe 1 eingestellt ist, sonst erhält die Waage den falschen Einzelpreis - oder gar keinen, wenn Multiprix vollständig deaktiviert ist.
+
+Terminal = Terminal
+DIRECTPRINTWHB_SECURE = SSL verwenden?
+DIRECTPRINTWHB_IPADDRESS = IP-Adresse/Hostname
+DIRECTPRINTWHB_PORT = TCP-Portnummer
+DIRECTPRINTWHB_PRINTER_SERVICE_NAME = WebSocket-Name
+DIRECTPRINTWHB_TPPRINTERID = Typ
+TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES = Für Rechnungen zu verwendende Vorlage
+TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH = Maximale Länge des Produktnamens
+RECEIPT_PRINTER_NB_CHARACT_BY_LINE = Anzahl Zeichen pro Zeile
+
+# Hardware connection status indicators (topnav)
+TPCDeviceScale = Waage
+TPCDeviceDisplay = Kundendisplay
+TPCDevicePrinter = Bondrucker
+TPCDeviceDrawer = Kassenschublade
+TPCStateConnecting = Verbindung wird hergestellt…
+TPCStateConnected = Verbunden
+TPCStateDisconnected = Getrennt (automatische Wiederverbindung)

@@ -1,0 +1,67 @@
+# Copyright (C) 2022 SuperAdmin
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+#
+# Generic
+#
+
+# Module label 'ModuleTakeposConnectorName'
+ModuleTakeposConnectorName = Takepos Connector
+# Module description 'ModuleTakeposConnectorDesc'
+ModuleTakeposConnectorDesc = Conector de hardware para TakePOS
+
+TemporaryReceipt = Ticket provisional
+number = n.º
+TotalTTCCourt = Total
+UnitPriceShort = P.U
+
+TakeposconnCommonParameters = Parámetros comunes
+TakeposconnSpecificValue = Valor específico
+TakeposconnRequiresWHB = TakePOS Connector necesita que el servicio Webapp-Hardware-Bridge (WHB) esté instalado y en ejecución para comunicarse con la balanza, la impresora, la pantalla del cliente y el cajón portamonedas.
+TakeposconnDownloadWHB = Descargar el servicio de acceso al hardware Webapp-Hardware-Bridge
+TakeposconnSectionScale = Balanza
+TakeposconnSectionDisplay = Pantalla del cliente
+TakeposconnSectionPrinter = Impresión de tickets
+WEIGHINGSCALE_WEBSOCKET_URL = URL WebSocket de la balanza
+CUSTOMERDISPLAY_WEBSOCKET_URL = URL WebSocket de la pantalla del cliente
+WEIGHINGSCALE_PROTOCOL = Protocolo de comunicación con la balanza
+TAKEPOS_CONNECTOR_TO_WHB_SCALE = Enrutar la balanza a través de WHB
+TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY = Enrutar la pantalla del cliente a través de WHB
+PRODUCT_USE_UNITS = Activar las unidades de producto
+TakeposconnHelpScaleUrl = URL WebSocket configurada en el Webapp-Hardware-Bridge para realizar las pesadas
+TakeposconnHelpDisplayUrl = URL WebSocket configurada en el Webapp-Hardware-Bridge para la pantalla del cliente
+TakeposconnHelpWhbScale = Requiere Dolibarr >= 24.0.1. Si está desactivado, TakePOS utiliza su llamada HTTP directa histórica a TAKEPOS_PRINT_SERVER en lugar de la conexión WebSocket de este módulo hacia WHB - actívelo solo si realmente utiliza WHB para la balanza.
+TakeposconnHelpWhbDisplay = Requiere Dolibarr >= 24.0.1. Si está desactivado, TakePOS utiliza su llamada HTTP directa histórica a TAKEPOS_PRINT_SERVER en lugar de la conexión WebSocket de este módulo hacia WHB - actívelo solo si realmente utiliza WHB para la pantalla del cliente.
+TakeposconnHelpProductUseUnits = Necesario para la pesada: sin esto, ningún producto puede tener asignada una unidad (por ejemplo, KG), por lo que TakePOS nunca tiene motivo para solicitar una pesada. El core lo oculta en la página de configuración del módulo Productos - se activa aquí en su lugar.
+TakeposconnHelpMultiprices = El core de TakePOS siempre solicita a la balanza el precio unitario en el nivel de precio de cliente n.º 1 (funcionalidad de Dolibarr "Productos con varios precios" / Multiprecio, PRODUIT_MULTIPRICES), sea cual sea el nivel de precio real del cliente en caja - es una limitación del core, no algo que este módulo pueda evitar. Active Multiprecio (Inicio - Configuración - Módulos - Productos y servicios) y asegúrese de que el cliente genérico de TakePOS utilizado por este terminal (CASHDESK_ID_THIRDPARTY) esté configurado en el nivel de precio n.º 1, de lo contrario la balanza recibirá el precio unitario incorrecto - o ninguno si Multiprecio está desactivado por completo.
+
+Terminal = Terminal
+DIRECTPRINTWHB_SECURE = ¿Usar SSL?
+DIRECTPRINTWHB_IPADDRESS = Dirección IP/Nombre de host
+DIRECTPRINTWHB_PORT = Número de puerto TCP
+DIRECTPRINTWHB_PRINTER_SERVICE_NAME = Nombre del WebSocket
+DIRECTPRINTWHB_TPPRINTERID = Tipo
+TAKEPOS_TEMPLATE_TO_USE_FOR_INVOICES = Plantilla a utilizar para los tickets
+TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH = Longitud máxima del nombre del producto
+RECEIPT_PRINTER_NB_CHARACT_BY_LINE = Número de caracteres por línea
+
+# Hardware connection status indicators (topnav)
+TPCDeviceScale = Balanza
+TPCDeviceDisplay = Pantalla del cliente
+TPCDevicePrinter = Impresora de tickets
+TPCDeviceDrawer = Cajón portamonedas
+TPCStateConnecting = Conectando…
+TPCStateConnected = Conectado
+TPCStateDisconnected = Desconectado (reconexión automática)
