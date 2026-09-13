@@ -573,6 +573,32 @@ class dolReceiptPrinter extends Printer
 	}
 
 	/**
+	 *  Pad or truncate a string to an exact display width, counted in characters
+	 *  (mb_strlen) rather than bytes (strlen/str_pad). A ticket column built with the
+	 *  byte-based str_pad()/substr() ends up too wide by one byte per multi-byte UTF-8
+	 *  character (accents, etc.), even though it "fits" $length bytes: the printer only
+	 *  renders one column per character, so every accented character in a column silently
+	 *  shifts everything printed after it to the left by (byte length - char length).
+	 *
+	 *  @param   string   $str      String to pad/truncate (any encoding artifact from the DB is treated as UTF-8)
+	 *  @param   int      $length   Target width, in characters
+	 *  @param   string   $padStr   Single padding character (kept ASCII: '.', ' ', '0', ...)
+	 *  @param   int      $padType  STR_PAD_RIGHT or STR_PAD_LEFT
+	 *  @return  string
+	 */
+	private function mbStrPad($str, $length, $padStr = ' ', $padType = STR_PAD_RIGHT)
+	{
+		$str = (string) $str;
+		$length = (int) $length;
+		$strLen = mb_strlen($str, 'UTF-8');
+		if ($strLen >= $length) {
+			return mb_substr($str, 0, $length, 'UTF-8');
+		}
+		$padding = str_repeat($padStr, $length - $strLen);
+		return ($padType == STR_PAD_LEFT) ? ($padding.$str) : ($str.$padding);
+	}
+
+	/**
 	 *  Function to Print Receipt Ticket
 	 *
 	 *  @param   Facture|Commande   $object         Order or invoice object
@@ -648,6 +674,14 @@ class dolReceiptPrinter extends Printer
 		dol_include_once('/takeposconnector/lib/takeposconnector.lib.php');
 		$nbcharactbyline = (takeposconnectorGetConf('RECEIPT_PRINTER_NB_CHARACT_BY_LINE', $terminal) !== '' ? takeposconnectorGetConf('RECEIPT_PRINTER_NB_CHARACT_BY_LINE', $terminal) : 48);
 		$lineDescMaxLength = (takeposconnectorGetConf('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH', $terminal) !== '' ? takeposconnectorGetConf('TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH', $terminal) : 30);
+		// Les colonnes qté(4) + PU(8) + total TTC(8) + TVA(3) + 1 séparateur = 24 caractères
+		// fixes sur la ligne produit/en-tête (DOL_PRINT_LINES_HEADER / DOL_PRINT_OBJECT_LINES),
+		// quelle que soit la désignation. Si TAKEPOS_INVOICE_LINE_DESC_MAX_LENGTH est réglé trop
+		// large pour RECEIPT_PRINTER_NB_CHARACT_BY_LINE, $spacestoadd devient négatif et est
+		// ramené à 0 plus bas : la ligne déborde alors silencieusement de la largeur imprimante
+		// au lieu d'être raccourcie. On borne donc ici la désignation à la place réellement
+		// disponible, pour que la ligne ne dépasse jamais $nbcharactbyline.
+		$lineDescMaxLength = min($lineDescMaxLength, max(1, $nbcharactbyline - 24));
 
 		$socid = getDolGlobalInt('CASHDESK_ID_THIRDPARTY' . $terminal);
 		$customer = new Societe($db);
@@ -685,12 +719,12 @@ class dolReceiptPrinter extends Printer
 						}
 						break;
 					case 'DOL_PRINT_LINES_HEADER':
-						$strHeaderDesignation = str_pad($langs->tr("Designation"), $lineDescMaxLength, ' ', STR_PAD_RIGHT);
-						$strHeaderQty = str_pad($langs->tr("Qty"), 4, ' ', STR_PAD_LEFT);
-						$strHeaderUnitPrice = str_pad($langs->tr("UnitPriceShort"), 8, ' ', STR_PAD_LEFT);
-						$strHeaderTotalTTC = str_pad($langs->tr("TotalTTCCourt"), 8, ' ', STR_PAD_LEFT);
-						$strHeaderTax = str_pad('T', 3, ' ', STR_PAD_LEFT);
-						$spacestoadd = $nbcharactbyline - strlen($strHeaderDesignation) - strlen($strHeaderQty) - strlen($strHeaderUnitPrice) - strlen($strHeaderTotalTTC) - strlen($strHeaderTax) - 1;
+						$strHeaderDesignation = $this->mbStrPad($langs->tr("Designation"), $lineDescMaxLength, ' ', STR_PAD_RIGHT);
+						$strHeaderQty = $this->mbStrPad($langs->tr("Qty"), 4, ' ', STR_PAD_LEFT);
+						$strHeaderUnitPrice = $this->mbStrPad($langs->tr("UnitPriceShort"), 8, ' ', STR_PAD_LEFT);
+						$strHeaderTotalTTC = $this->mbStrPad($langs->tr("TotalTTCCourt"), 8, ' ', STR_PAD_LEFT);
+						$strHeaderTax = $this->mbStrPad('T', 3, ' ', STR_PAD_LEFT);
+						$spacestoadd = $nbcharactbyline - mb_strlen($strHeaderDesignation, 'UTF-8') - mb_strlen($strHeaderQty, 'UTF-8') - mb_strlen($strHeaderUnitPrice, 'UTF-8') - mb_strlen($strHeaderTotalTTC, 'UTF-8') - mb_strlen($strHeaderTax, 'UTF-8') - 1;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
 						$this->printer->text($strHeaderDesignation.$spaces.$strHeaderQty.$strHeaderUnitPrice.$strHeaderTotalTTC.$strHeaderTax."\n");
 						break;
@@ -704,36 +738,36 @@ class dolReceiptPrinter extends Printer
 							$tva_map[$line->tva_tx] = $tva_index;
 							if ($line->fk_product) {
 								$line->fetch_product();
-								$strProductLabel = str_pad(substr($line->product_label, 0, $lineDescMaxLength), $lineDescMaxLength, ' ', STR_PAD_RIGHT);
-								$strQty = str_pad($line->qty, 4, ' ', STR_PAD_LEFT);
-								$strUnitPrice = str_pad(price($line->product->multiprices_ttc[$customer->price_level]), 8, ' ', STR_PAD_LEFT);
-								$strPrice = str_pad(price($line->total_ttc), 8, ' ', STR_PAD_LEFT);
-								$strTax = str_pad($tva_map[$line->tva_tx], 3, ' ', STR_PAD_LEFT);
-								$spacestoadd = $nbcharactbyline - strlen($strProductLabel) - strlen($strQty) - strlen($strUnitPrice) - strlen($strPrice) - strlen($strTax) - 1 ;
+								$strProductLabel = $this->mbStrPad($line->product_label, $lineDescMaxLength, ' ', STR_PAD_RIGHT);
+								$strQty = $this->mbStrPad($line->qty, 4, ' ', STR_PAD_LEFT);
+								$strUnitPrice = $this->mbStrPad(price($line->product->multiprices_ttc[$customer->price_level]), 8, ' ', STR_PAD_LEFT);
+								$strPrice = $this->mbStrPad(price($line->total_ttc), 8, ' ', STR_PAD_LEFT);
+								$strTax = $this->mbStrPad($tva_map[$line->tva_tx], 3, ' ', STR_PAD_LEFT);
+								$spacestoadd = $nbcharactbyline - mb_strlen($strProductLabel, 'UTF-8') - mb_strlen($strQty, 'UTF-8') - mb_strlen($strUnitPrice, 'UTF-8') - mb_strlen($strPrice, 'UTF-8') - mb_strlen($strTax, 'UTF-8') - 1 ;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
 								$this->printer->text($strProductLabel.$spaces.$strQty.$strUnitPrice.$strPrice.$strTax."\n");
 							} else {
-								$strLineDesc = substr($line->desc, 0, $lineDescMaxLength);
-								$spacestoadd = $nbcharactbyline - strlen($strLineDesc) - strlen($line->qty) - 10 - 1;
+								$strLineDesc = mb_substr($line->desc, 0, $lineDescMaxLength, 'UTF-8');
+								$spacestoadd = $nbcharactbyline - mb_strlen($strLineDesc, 'UTF-8') - mb_strlen((string) $line->qty, 'UTF-8') - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($strLineDesc.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 11, ' ', STR_PAD_LEFT).'  '.$tva_map[$line->tva_tx]."\n");
+								$this->printer->text($strLineDesc.$spaces.$line->qty.' '.$this->mbStrPad(price($line->total_ttc), 11, ' ', STR_PAD_LEFT).'  '.$tva_map[$line->tva_tx]."\n");
 							}
 						}
 						break;
 					case 'DOL_PRINT_OBJECT_LINES_WITH_NOTES':
 						foreach ($object->lines as $line) {
 							if ($line->fk_product) {
-								$spacestoadd = $nbcharactbyline - strlen($line->name) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - mb_strlen($line->name, 'UTF-8') - mb_strlen((string) $line->qty, 'UTF-8') - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->name.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->name.$spaces.$line->qty.' '.$this->mbStrPad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 								$this->printer->text(strip_tags(htmlspecialchars_decode($line->product_label))."\n");
-								$spacestoadd = $nbcharactbyline - strlen($line->desc) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - mb_strlen($line->desc, 'UTF-8') - mb_strlen((string) $line->qty, 'UTF-8') - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
 								$this->printer->text($line->desc."\n");
 							} else {
-								$spacestoadd = $nbcharactbyline - strlen($line->desc) - strlen($line->qty) - 10 - 1;
+								$spacestoadd = $nbcharactbyline - mb_strlen($line->desc, 'UTF-8') - mb_strlen((string) $line->qty, 'UTF-8') - 10 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->desc.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->desc.$spaces.$line->qty.' '.$this->mbStrPad(price($line->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 							}
 						}
 						break;
@@ -744,9 +778,9 @@ class dolReceiptPrinter extends Printer
 							$vatarray[$line->tva_tx] += $line->total_tva;
 						}
 						foreach ($vatarray as $vatkey => $vatvalue) {
-							$spacestoadd = $nbcharactbyline - strlen(price($vatkey)) - 30;
+							$spacestoadd = $nbcharactbyline - mb_strlen(price($vatkey), 'UTF-8') - 30;
 							$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-							$this->printer->text('   ('.$tva_map[$vatkey].')'.$spaces.price($vatkey).'% '.str_pad(price($vatvalue), 8, ' ', STR_PAD_LEFT)."\n");
+							$this->printer->text('   ('.$tva_map[$vatkey].')'.$spaces.price($vatkey).'% '.$this->mbStrPad(price($vatvalue), 8, ' ', STR_PAD_LEFT)."\n");
 						}
 						break;
 					case 'DOL_PRINT_OBJECT_TAX1':
@@ -755,7 +789,7 @@ class dolReceiptPrinter extends Printer
 						foreach ($object->lines as $line) {
 							$total_localtax1 += $line->total_localtax1;
 						}
-						$this->printer->text(str_pad(price($total_localtax1), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($this->mbStrPad(price($total_localtax1), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_TAX2':
 						//var_dump($object);
@@ -763,39 +797,39 @@ class dolReceiptPrinter extends Printer
 						foreach ($object->lines as $line) {
 							$total_localtax2 += $line->total_localtax2;
 						}
-						$this->printer->text(str_pad(price($total_localtax2), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($this->mbStrPad(price($total_localtax2), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_TOTAL_HT':
 						$title = $langs->trans('TotalHT');
-						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spacestoadd = $nbcharactbyline - mb_strlen($title, 'UTF-8') - 10;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($title.$spaces.str_pad(price($object->total_ht), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($title.$spaces.$this->mbStrPad(price($object->total_ht), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_TOTAL_VAT':
 						$title = $langs->trans('TotalVAT');
-						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spacestoadd = $nbcharactbyline - mb_strlen($title, 'UTF-8') - 10;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($title.$spaces.str_pad(price($object->total_tva), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($title.$spaces.$this->mbStrPad(price($object->total_tva), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_TOTAL_TTC':
 						$title = $langs->trans('TotalTTC');
-						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spacestoadd = $nbcharactbyline - mb_strlen($title, 'UTF-8') - 10;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($title.$spaces.str_pad(price($object->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($title.$spaces.$this->mbStrPad(price($object->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_PRINT_OBJECT_TOTAL':
 						$title = $langs->trans('TotalHT');
-						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spacestoadd = $nbcharactbyline - mb_strlen($title, 'UTF-8') - 10;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($title.$spaces.str_pad(price($object->total_ht), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($title.$spaces.$this->mbStrPad(price($object->total_ht), 10, ' ', STR_PAD_LEFT)."\n");
 						$title = $langs->trans('TotalVAT');
-						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spacestoadd = $nbcharactbyline - mb_strlen($title, 'UTF-8') - 10;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($title.$spaces.str_pad(price($object->total_tva), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($title.$spaces.$this->mbStrPad(price($object->total_tva), 10, ' ', STR_PAD_LEFT)."\n");
 						$title = $langs->trans('TotalTTC');
-						$spacestoadd = $nbcharactbyline - strlen($title) - 10;
+						$spacestoadd = $nbcharactbyline - mb_strlen($title, 'UTF-8') - 10;
 						$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-						$this->printer->text($title.$spaces.str_pad(price($object->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
+						$this->printer->text($title.$spaces.$this->mbStrPad(price($object->total_ttc), 10, ' ', STR_PAD_LEFT)."\n");
 						break;
 					case 'DOL_LINE_FEED':
 						$this->printer->feed();
@@ -892,9 +926,9 @@ class dolReceiptPrinter extends Printer
 					case 'DOL_PRINT_ORDER_LINES':
 						foreach ($object->lines as $line) {
 							if ($line->special_code == $this->orderprinter) {
-								$spacestoadd = $nbcharactbyline - strlen($line->name) - strlen($line->qty) - 13 - 1;
+								$spacestoadd = $nbcharactbyline - mb_strlen($line->name, 'UTF-8') - mb_strlen((string) $line->qty, 'UTF-8') - 13 - 1;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-								$this->printer->text($line->name.$spaces.$line->qty.' '.str_pad(price($line->total_ttc), 13, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($line->name.$spaces.$line->qty.' '.$this->mbStrPad(price($line->total_ttc), 13, ' ', STR_PAD_LEFT)."\n");
 								$this->printer->text(strip_tags(htmlspecialchars_decode($line->desc))."\n");
 							}
 						}
@@ -912,17 +946,17 @@ class dolReceiptPrinter extends Printer
 							$i = 0;
 							while ($i < $num) {
 								$row = $this->db->fetch_object($resql);
-								$spacestoadd = $nbcharactbyline - strlen($langs->transnoentitiesnoconv("PaymentTypeShort".$row->code)) - 12;
+								$spacestoadd = $nbcharactbyline - mb_strlen($langs->transnoentitiesnoconv("PaymentTypeShort".$row->code), 'UTF-8') - 12;
 								$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
 								$amount_payment = (!empty($conf->multicurrency->enabled) && $object->multicurrency_tx != 1) ? $row->multicurrency_amount : $row->amount;
 								if ($row->code == "LIQ") {
 									$amount_payment = $amount_payment + $row->pos_change; // Show amount with excess received if is cash payment
 								}
-								$this->printer->text($spaces.$langs->transnoentitiesnoconv("PaymentTypeShort".$row->code).' '.str_pad(price($amount_payment), 10, ' ', STR_PAD_LEFT)."\n");
+								$this->printer->text($spaces.$langs->transnoentitiesnoconv("PaymentTypeShort".$row->code).' '.$this->mbStrPad(price($amount_payment), 10, ' ', STR_PAD_LEFT)."\n");
 								if ($row->code == "LIQ" && $row->pos_change > 0) { // Print change only in cash payments
-									$spacestoadd = $nbcharactbyline - strlen($langs->trans("Change")) - 12;
+									$spacestoadd = $nbcharactbyline - mb_strlen($langs->trans("Change"), 'UTF-8') - 12;
 									$spaces = str_repeat(' ', $spacestoadd > 0 ? $spacestoadd : 0);
-									$this->printer->text($spaces.$langs->trans("Change").' '.str_pad(price($row->pos_change), 10, ' ', STR_PAD_LEFT)."\n");
+									$this->printer->text($spaces.$langs->trans("Change").' '.$this->mbStrPad(price($row->pos_change), 10, ' ', STR_PAD_LEFT)."\n");
 								}
 								$i++;
 							}
