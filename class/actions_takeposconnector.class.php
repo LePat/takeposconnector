@@ -58,7 +58,14 @@ class ActionsTakeposConnector extends CommonHookActions
 	 */
 	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager)
 	{
-		if ($parameters['currentcontext'] == 'takeposfrontend') {
+		// 'takeposfrontend' = index.php (page principale). 'takepospay' = pay.php, qui
+		// s'ouvre dans sa PROPRE iframe ($.colorbox({..., iframe:"true"}) dans
+		// index.php:701) : ce n'est pas le même document/scope JS que index.php, donc
+		// webSocketCustomerDisplay/webSocketWeight (déclarés par ce script, référencés
+		// directement par pay.php core) doivent y être redéclarés. invoice.php, lui, est
+		// injecté en ajax dans le DOM d'index.php (#poslines.load(...)) : il partage déjà
+		// son scope JS et n'a pas besoin de sa propre inclusion.
+		if (in_array($parameters['currentcontext'], array('takeposfrontend', 'takepospay'))) {
 			$this->resprints = '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/takeposconnector.js.php"></script>' . PHP_EOL;
 			$this->resprints .= '<script src="' . DOL_URL_ROOT . '/custom/takeposconnector/js/dialog06-protocol.js"></script>' . PHP_EOL;
 			$this->resprints .= '<link rel="stylesheet" type="text/css" href="' . DOL_URL_ROOT . '/custom/takeposconnector/css/takeposconnector.css">' . PHP_EOL;

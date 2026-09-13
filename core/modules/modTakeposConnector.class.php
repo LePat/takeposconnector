@@ -118,6 +118,7 @@ class modTakeposConnector extends DolibarrModules
 			'hooks' => array(
 				'data' => array(
 					'takeposfrontend',
+					'takepospay',
 				),
 				'entity' => '0',
 			),
