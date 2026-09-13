@@ -119,6 +119,11 @@ $tpcDisplayUrl = takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $termi
 $tpcHasScale   = !empty($tpcScaleUrl);
 $tpcHasDisplay = !empty($tpcDisplayUrl);
 $tpcHasDrawer  = (getDolGlobalInt('TAKEPOS_ADD_BUTTON_OPEN_DRAWER'.$terminaltouse) > 0);
+// Core (htdocs/takepos/invoice.php) generates the CustomerDisplay() JS by raw string
+// concatenation of the product label/price, without escaping — gates the client-side
+// mitigation below regardless of which branch (WHB websocket vs. legacy print-server
+// ajax GET) actually forwards the text. See CLAUDE.md, section afficheur client.
+$tpcCustomerDisplayEnabled = getDolGlobalString('TAKEPOS_CUSTOMER_DISPLAY');
 
 ?>
 
@@ -358,7 +363,61 @@ const webSocketCustomerDisplay = new WebSocketSerial({
 });
 tpcAppareils['display'] = webSocketCustomerDisplay;
 <?php } ?>
-	
+
+<?php if ($tpcCustomerDisplayEnabled) { ?>
+// ===============================================
+// Filet de sécurité — afficheur client : caractères non-ASCII / apostrophes
+// ===============================================
+// htdocs/takepos/invoice.php (core) construit la fonction JS CustomerDisplay() par simple
+// concaténation de $prod->label / price() dans une chaîne '...' SANS dol_escape_js() ni
+// translittération. Deux conséquences distinctes, corrigées ici en attendant le correctif
+// core (PR upstream, voir CLAUDE.md) :
+//   1. Un nom de produit avec un caractère accentué (UTF-8 multi-octets, ex: "é") part tel
+//      quel sur le port série de l'afficheur, qui est 1 octet = 1 caractère : le caractère
+//      se scinde en glyphes parasites une fois affiché (ex: "Mémoire" -> "M?imoire").
+//   2. Un nom de produit avec une apostrophe (ex: "Café l'Arabica") casse la syntaxe du
+//      <script> généré — pas seulement l'afficheur : TOUT le bloc JS de ~400 lignes réinjecté
+//      à chaque rafraîchissement du ticket (#poslines .load(...)) échoue à s'exécuter.
+//
+// On intercepte donc la réponse ajax brute d'invoice.php avant que jQuery ne l'insère/exécute
+// (.load() déclenche un eval des <script> trouvés), et on assainit les deux littéraux
+// var line1='...' / var line2='...' généré par le core.
+//
+// Fragile par nature (dépend du texte exact généré par invoice.php:1999-2003) : à retirer
+// dès que le correctif core est mergé et déployé.
+
+function tpcAssainirTexteAfficheur(texte) {
+	// Translittère les caractères accentués (é -> e, ç -> c, ...) puis retire tout ce qui
+	// reste de non-ASCII imprimable (ex: "€", emojis) ainsi que les caractères qui casseraient
+	// la syntaxe du littéral JS ('"\\).
+	return texte
+		.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+		.replace(/[^\x20-\x7E]/g, '')
+		.replace(/['"\\]/g, '');
+}
+
+function tpcAssainirReponseInvoice(donnees) {
+	return donnees
+		.replace(/var line1='([\s\S]*?)'\.substring\(0,20\);line1=line1\.padEnd\(20\);/,
+			function (m, contenu) {
+				return "var line1='" + tpcAssainirTexteAfficheur(contenu) + "'.substring(0,20);line1=line1.padEnd(20);";
+			})
+		.replace(/var line2='([\s\S]*?)'\.substring\(0,20\);line2=line2\.padEnd\(20\);/,
+			function (m, contenu) {
+				return "var line2='" + tpcAssainirTexteAfficheur(contenu) + "'.substring(0,20);line2=line2.padEnd(20);";
+			});
+}
+
+$.ajaxSetup({
+	dataFilter: function (donnees, type) {
+		if (typeof donnees !== 'string' || !this.url || this.url.indexOf('invoice.php') === -1) {
+			return donnees;
+		}
+		return tpcAssainirReponseInvoice(donnees);
+	}
+});
+<?php } ?>
+
 // ===============================================
 // WebSocketWeigh (default protocol)
 // ===============================================
