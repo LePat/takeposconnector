@@ -114,10 +114,16 @@ if (takeposconnectorGetConf('DIRECTPRINTWHB_SECURE', $terminaltouse) == 'oui') {
 }
 
 // Devices configured for this terminal — drives the status indicators shown in the topnav.
+// Requires BOTH a WebSocket URL AND the "route through WHB" checkbox: the URL field alone
+// can stay filled in (e.g. left over from a past test) while TAKEPOS_CONNECTOR_TO_WHB_SCALE/
+// _CUSTOMER_DISPLAY is off, in which case core falls back to the legacy plain-HTTP
+// TAKEPOS_PRINT_SERVER path (see TakeposconnHelpWhbScale/TakeposconnHelpWhbDisplay) and this
+// module's WHB WebSocket is never actually used for that device — showing its icon/"connected"
+// status then would be misleading (and wastes a WebSocket connection for nothing).
 $tpcScaleUrl   = takeposconnectorGetConf('WEIGHINGSCALE_WEBSOCKET_URL', $terminaltouse);
 $tpcDisplayUrl = takeposconnectorGetConf('CUSTOMERDISPLAY_WEBSOCKET_URL', $terminaltouse);
-$tpcHasScale   = !empty($tpcScaleUrl);
-$tpcHasDisplay = !empty($tpcDisplayUrl);
+$tpcHasScale   = !empty($tpcScaleUrl) && getDolGlobalString('TAKEPOS_CONNECTOR_TO_WHB_SCALE');
+$tpcHasDisplay = !empty($tpcDisplayUrl) && getDolGlobalString('TAKEPOS_CONNECTOR_TO_WHB_CUSTOMER_DISPLAY');
 $tpcHasDrawer  = (getDolGlobalInt('TAKEPOS_ADD_BUTTON_OPEN_DRAWER'.$terminaltouse) > 0);
 // Core (htdocs/takepos/invoice.php) generates the CustomerDisplay() JS by raw string
 // concatenation of the product label/price, without escaping — gates the client-side
